@@ -10,7 +10,7 @@
 #include <openssl/hmac.h>
 
 
-void hmac_algo(char byte_secret[], char byte_string[], char out[]) {
+void hmac_algo(const char byte_secret[], const char byte_string[], char out[]) {
 	
 	unsigned int len = 20;
 	
@@ -21,11 +21,11 @@ void hmac_algo(char byte_secret[], char byte_string[], char out[]) {
 int main(int arc, char** argv) {
 
 	//srand(time(NULL));
-	char base32_secret[17] = "JBSWY3DPEHPK3PXP\0";
+	const char base32_secret[17] = "JBSWY3DPEHPK3PXP\0";
 	//otp_random_base32(16, default_chars, base32_secret);
 	
 	// for OTP generation
-	char digest[5] = "sha1\0";
+	const char digest[5] = "sha1\0";
 	
 	OTPData data;
 	totp_init(&data, base32_secret, 160, hmac_algo, digest, 6, 30);
@@ -52,10 +52,10 @@ int main(int arc, char** argv) {
 
 	// printf("HOTP Code: %s\n", code);
 	
-	char ho1 = hotp_verify(&data, 996554, 1);
-	printf("Successfull? %d\n", ho1);
+	// char ho1 = hotp_verify(&data, 996554, 1);
+	// printf("Successfull? %d\n", ho1);
 	
-	char bol = totp_verify(&data, 236351, time(NULL), 4);
+	char bol = totp_verify(&data, 274932, time(NULL), 4);
 	printf("Successfull? %d\n", bol);
 	
 	return 0;

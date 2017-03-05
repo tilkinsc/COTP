@@ -12,19 +12,6 @@
 
 
 /*
-	Default characters used in BASE32 digests.
-	For use with otp_random_base32()
-*/
-const char default_chars[32] = {
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-	'U', 'V', 'W', 'X', 'Y', 'Z', '2', '3', '4', '5',
-	'6', '7'
-};
-
-
-
-/*
 	Functions to initialize the data struct OTPData.
 	Everything is set but the interval in only the occasion you
 	  aren't using TOTP.
@@ -33,7 +20,7 @@ const char default_chars[32] = {
 	You can use anything though, but must require some form to attain
 	  a code, like google authenticator. Also works with authy.
 */
-void otp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(char[], char[], char[]), char digest[], int digits) {
+void otp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits) {
 	data->digits = digits ? digits : 6;
 	
 	data->base32_secret = &base32_secret[0];
@@ -44,13 +31,13 @@ void otp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(c
 	data->method = OTP;
 }
 
-void totp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(char[], char[], char[]), char digest[], int digits, int interval) {
+void totp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits, int interval) {
 	otp_init(data, base32_secret, bits, ALGORITHM, digest, digits);
-	data->method = TOTP;
 	data->interval = interval;
+	data->method = TOTP;
 }
 
-void hotp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(char[], char[], char[]), char digest[], int digits) {
+void hotp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits) {
 	otp_init(data, base32_secret,  bits, ALGORITHM, digest, digits);
 	data->method = HOTP;
 }
@@ -205,7 +192,7 @@ char totp_verify(OTPData* data, int key, int for_time, int valid_window) {
 	if(valid_window > 0) {
 		int i;
 		for (i=-valid_window; i<valid_window; i++) {
-			char cmp = totp_compare(data, key, i, for_time);
+			const char cmp = totp_compare(data, key, i, for_time);
 			if(cmp) return cmp; // else continue
 		}
 		return 0;

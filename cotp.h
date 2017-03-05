@@ -1,11 +1,17 @@
 #ifndef __COTP_H_
 #define __COTP_H_
 
-
 /*
-	See the source file for information.
+	Default characters used in BASE32 digests.
+	For use with otp_random_base32()
 */
-const char default_chars[32];
+static const char otp_DEFAULT_CHARS[32] = {
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+	'U', 'V', 'W', 'X', 'Y', 'Z', '2', '3', '4', '5',
+	'6', '7'
+};
+
 
 /*
 	Used for differentiation on which
@@ -50,19 +56,19 @@ typedef struct OTPData {
 	int interval; // TOTP exclusive
 	int bits;
 	OTPType method;
-	void (*ALGORITHM)(char[], char[], char[]);
+	void (*ALGORITHM)(const char[], const char[], char[]);
 	
-	char* digest;
-	char* base32_secret;
+	const char* digest;
+	const char* base32_secret;
 } OTPData;
 
 
 /*
 	Struct initialization functions
 */
-void otp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(char[], char[], char[]), char digest[], int digits);
-void totp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(char[], char[], char[]), char digest[], int digits, int interval);
-void hotp_init(OTPData* data, char base32_secret[], int bits, void (*ALGORITHM)(char[], char[], char[]), char digest[], int digits);
+void otp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits);
+void totp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits, int interval);
+void hotp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits);
 
 
 /*
@@ -90,7 +96,5 @@ int totp_timecode(OTPData* data, int for_time);
 char hotp_compare(OTPData* data, int key, int counter);
 int hotp_at(OTPData* data, int counter, char out_str[]);
 char hotp_verify(OTPData* data, int key, int counter);
-
-
 
 #endif
