@@ -3,8 +3,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "cotp.h"
-#include "base32.h"
+#include "../cotp.h"
 
 #include <openssl/evp.h>
 #include <openssl/hmac.h>

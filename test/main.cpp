@@ -1,5 +1,5 @@
 
-#include "cotp.hpp"
+#include "../cotp.hpp"
 
 extern "C" {
 	#include <openssl/evp.h>
