@@ -29,6 +29,7 @@ int main(int arc, char** argv) {
 	OTPData data;
 	totp_init(&data, base32_secret, 160, hmac_algo, digest, 6, 30);
 	
+	// Print the stuff in OTPData
 	printf("// data //\n");
 	printf("Digits: %d\n", data.digits);
 	printf("Interval: %d\n", data.interval);
@@ -39,12 +40,19 @@ int main(int arc, char** argv) {
 	printf("Secret: %s\n", data.base32_secret);
 	printf("// data //\n");
 	
+	
+	
+	// Do a TOTP example
 	// char code[data.digits+1];
 	// memset(code, 0, data.digits+1);
 	// totp_now(&data, code);
 	
 	// printf("OTP Generated: %s\n", code);
 	
+	char bol = totp_verify(&data, 274932, time(NULL), 4);
+	printf("Successfull? %d\n", bol);
+	
+	// Do a HOTP example
 	// char code[data.digits+1];
 	// memset(code, 0, data.digits+1);
 	// hotp_at(&data, 1, code);
@@ -53,9 +61,6 @@ int main(int arc, char** argv) {
 	
 	// char ho1 = hotp_verify(&data, 996554, 1);
 	// printf("Successfull? %d\n", ho1);
-	
-	char bol = totp_verify(&data, 274932, time(NULL), 4);
-	printf("Successfull? %d\n", bol);
 	
 	return 0;
 }
