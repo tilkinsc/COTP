@@ -1,4 +1,4 @@
-= COTP =
+# COTP
 
 This library works with C++, but is targeted at C. I made a .hpp header that wraps the C functions, which I find gross. Feel free to clean it up and do a pull request.
 
@@ -14,13 +14,13 @@ Looking at LuaOTP from COTP you can see LuaOTP and PyOTP allow building a URI to
 
 The base32 compilation units are licensed by someone else under something similar to 'keep my copyright, but you can even sell this.' Please see the respective files.
 
-== Small Overview ==
+## Small Overview
 
 The library allows you to create a function in a specified format to communicate with the OTP generation. You will have to manually do the cryptographic functions, which is easy in OpenSSL. I suggest it just for that. Evidently there was some security concerns, but it seems like a myth because they do what they are supposed to. Anyways, you need to encrypt then HMAC the encryption.
 
 One final note: If you want me to translate the OTP language in your language, ask.
 
-== Building ==
+### Building
 
 The examples use OpenSSL with -lcrypto and -lgdi32 for cryptographic functions.
 
