@@ -1,4 +1,5 @@
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -9,35 +10,34 @@
 #include <openssl/hmac.h>
 
 
-void hmac_algo(const char byte_secret[], const char byte_string[], char out[]) {
+int hmac_algo(const char byte_secret[], const char byte_string[], char out[]) {
 	
 	unsigned int len = 20;
 	
-	HMAC(EVP_sha1(), (unsigned char*)byte_secret, 10, (unsigned char*)byte_string, 8, (unsigned char*)out, &len);
+	return HMAC(EVP_sha1(), (unsigned char*)byte_secret, 10, (unsigned char*)byte_string, 8, (unsigned char*)out, &len) == NULL ? 0 : 1;
 	
 }
 
 int main(int arc, char** argv) {
 
 	//srand(time(NULL));
-	const char base32_secret[17] = "JBSWY3DPEHPK3PXP\0";
+	const char base32_secret[] = "JBSWY3DPEHPK3PXP";
 	//otp_random_base32(16, default_chars, base32_secret);
 	
 	// for OTP generation
-	const char digest[5] = "sha1\0";
+	const char digest[] = "SHA1";
 	
-	OTPData data;
-	totp_init(&data, base32_secret, 160, hmac_algo, digest, 6, 30);
+	OTPData* data = totp_new(base32_secret, 160, hmac_algo, digest, 6, 30);
 	
 	// Print the stuff in OTPData
 	printf("// data //\n");
-	printf("Digits: %d\n", data.digits);
-	printf("Interval: %d\n", data.interval);
-	printf("Method: %d\n", data.method);
+	printf("Digits: %d\n", data->digits);
+	printf("Interval: %d\n", data->interval);
+	printf("Method: %d\n", data->method);
 	
-	printf("Bits: %d\n", data.bits);
-	printf("Digest: %s\n", data.digest);
-	printf("Secret: %s\n", data.base32_secret);
+	printf("Bits: %d\n", data->bits);
+	printf("Digest: %s\n", data->digest);
+	printf("Secret: %s\n", data->base32_secret);
 	printf("// data //\n");
 	
 	
@@ -49,7 +49,7 @@ int main(int arc, char** argv) {
 	
 	// printf("OTP Generated: %s\n", code);
 	
-	char bol = totp_verify(&data, 274932, time(NULL), 4);
+	int bol = totp_verify(data, 600223, time(NULL), 4);
 	printf("Successfull? %d\n", bol);
 	
 	// Do a HOTP example
@@ -61,6 +61,8 @@ int main(int arc, char** argv) {
 	
 	// char ho1 = hotp_verify(&data, 996554, 1);
 	// printf("Successfull? %d\n", ho1);
+	
+	otp_free(data);
 	
 	return 0;
 }

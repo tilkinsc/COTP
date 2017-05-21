@@ -6,11 +6,11 @@ del *.o
 
 REM Build the C dependancies, and the program, first
 echo Building C
-gcc -O -Wall -c ../*.c main.c
-gcc -o test_c.exe base32.o cotp.o main.o -lcrypto -lgdi32
+gcc -O0 -g3 -Wall -c ../*.c main.c
+gcc -O0 -g3 -Wall -o test_c.exe base32.o cotp.o main.o -lcrypto -lgdi32
 
 REM Build the C++ application after
 echo Building C++
-g++ -O -Wall -c main.cpp
-g++ -o test_c++.exe base32.o cotp.o main.o -lcrypto -lgdi32
+g++ -O0 -g3 -Wall -c main.cpp
+g++ -O0 -g3 -Wall -o test_c++.exe base32.o cotp.o main.o -lcrypto -lgdi32
 

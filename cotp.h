@@ -1,5 +1,6 @@
-#ifndef __COTP_H_
-#define __COTP_H_
+
+#pragma once
+
 
 /*
 	Default characters used in BASE32 digests.
@@ -23,9 +24,17 @@ typedef enum OTPType {
 } OTPType;
 
 /*
+	Should return 0 if error, > 0 if no error.
+	First parameter is base32 secret key.
+	Second parameter is input number as string.
+	Last parameter is an output char buffer of the resulting HMAC operation.
+*/
+typedef int (*COTP_ALGO)(const char*, const char*, char*);
+
+/*
 	Holds data for use by the cotp module.
 	
-	The void algorithm should take argument 1(key) and
+	The algorithm should take argument 1(key) and
 	  argument 2(value) and encrypt/sha/whatever it.
 	  Then you should HMAC it. Then you should store
 	  the results in argument 3, which is predefined size
@@ -56,7 +65,7 @@ typedef struct OTPData {
 	int interval; // TOTP exclusive
 	int bits;
 	OTPType method;
-	void (*ALGORITHM)(const char[], const char[], char[]);
+	COTP_ALGO algo;
 	
 	const char* digest;
 	const char* base32_secret;
@@ -66,35 +75,38 @@ typedef struct OTPData {
 /*
 	Struct initialization functions
 */
-void otp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits);
-void totp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits, int interval);
-void hotp_init(OTPData* data, const char base32_secret[], int bits, void (*ALGORITHM)(const char[], const char[], char[]), const char digest[], int digits);
+OTPData* otp_new(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits);
+OTPData* totp_new(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits, int interval);
+OTPData* hotp_new(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits);
 
+/*
+	OTP free function
+*/
+void otp_free(OTPData* data);
 
 /*
 	OTP functions
 */
-int otp_generate(OTPData* data, int input, char output[]);
-void otp_byte_secret(OTPData* data, int size, char out_str[]);
-void otp_int_to_bytestring(int integer, char out_str[]);
-void otp_random_base32(int len, const char chars[], char out_str[]);
+int otp_generate(OTPData* data, int input, char* out_str);
+int otp_byte_secret(OTPData* data, int size, char* out_str);
+void otp_int_to_bytestring(int integer, char* out_str);
+void otp_random_base32(int len, const char* chars, char* out_str);
 
 
 /*
 	TOTP functions
 */
-char totp_compare(OTPData* data, int key, int increment, int for_time);
-int totp_at(OTPData* data, int for_time, int counter_offset, char out_str[]);
-int totp_now(OTPData* data, char out_str[]);
-char totp_verify(OTPData* data, int key, int for_time, int valid_window); // boolean plez
+int totp_compare(OTPData* data, int key, int increment, int for_time);
+int totp_at(OTPData* data, int for_time, int counter_offset, char* out_str);
+int totp_now(OTPData* data, char* out_str);
+int totp_verify(OTPData* data, int key, int for_time, int valid_window);
 int totp_timecode(OTPData* data, int for_time);
 
 
 /*
 	HOTP functions
 */
-char hotp_compare(OTPData* data, int key, int counter);
+int hotp_compare(OTPData* data, int key, int counter);
 int hotp_at(OTPData* data, int counter, char out_str[]);
-char hotp_verify(OTPData* data, int key, int counter);
+int hotp_verify(OTPData* data, int key, int counter);
 
-#endif
