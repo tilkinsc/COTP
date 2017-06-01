@@ -1,10 +1,14 @@
-#ifndef __COTP_HPP_
-#define __COTP_HPP_
+
+#pragma once
 
 extern "C" {
 	#include "cotp.h"
 }
 
+// almost all functions have a form of error they can return
+// please check accordingly, and look at cotp.c for information
+// about the various errors. Rule of thumb: If return 0, you have
+// an error.
 class OTP {
 	
 	// data structure should be untouched. It is managed by functions.
@@ -35,12 +39,12 @@ class OTP {
 		
 		// used internally, generates a byte string out of an 4-byte int
 		// ints need to be at least 4 bytes.
-		void int_to_bytestring(int integer, char* out_str) {
+		int int_to_bytestring(int integer, char* out_str) {
 			otp_int_to_bytestring(integer, out_str);
 		}
 		
 		// generates a random base32 code
-		void random_base32(int len, const char* chars, char* out_str) {
+		int random_base32(int len, const char* chars, char* out_str) {
 			otp_random_base32(len, chars, out_str);
 		}
 		
@@ -113,4 +117,3 @@ class HOTP : public OTP {
 	
 };
 
-#endif
