@@ -89,8 +89,8 @@ void otp_free(OTPData* data);
 */
 int otp_generate(OTPData* data, int input, char* out_str);
 int otp_byte_secret(OTPData* data, int size, char* out_str);
-void otp_int_to_bytestring(int integer, char* out_str);
-void otp_random_base32(int len, const char* chars, char* out_str);
+int otp_int_to_bytestring(int integer, char* out_str);
+int otp_random_base32(int len, const char* chars, char* out_str);
 
 
 /*
