@@ -86,6 +86,9 @@ void otp_free(OTPData* data) {
 	  Returns the one time password as int, aswell.
 	out_str must be data->digits length + 1 (for null terminator)
 	
+	If null is specified in argument out_str, no string will be
+	  generated of the result.
+	
 	Returns 0 if length of data->base32_secret % 8 != 0, else code
 */
 int otp_generate(OTPData* data, int input, char* out_str) {
@@ -125,23 +128,25 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 		(hmac[offset+3] & 0xFF);
 	code %= (int)pow(10, data->digits);
 	
-	// write temporary string to get resulting length
-	char* temp_str = calloc(data->digits + 1, sizeof(char));
-	sprintf(temp_str, "%d", code);
-	
-	// pad temp_str with 0's to ensure digit length, while moving string right to do so, to out_str
-	int zeros = data->digits - strlen(out_str);
-	if(zeros > 0) {
-		char* zeros_str = calloc(zeros, sizeof(char));
-		sprintf(out_str, "%s%s", zeros_str, temp_str);
-		free(zeros_str);
-	} else
-		sprintf(out_str, "%s", temp_str);
-	
-	// null terminate
-	out_str[data->digits] = '\0';
-	
-	free(temp_str);
+	if(out_str != NULL) {
+		// write temporary string to get resulting length
+		char* temp_str = calloc(data->digits + 1, sizeof(char));
+		sprintf(temp_str, "%d", code);
+		
+		// pad temp_str with 0's to ensure digit length, while moving string right to do so, to out_str
+		int zeros = data->digits - strlen(out_str);
+		if(zeros > 0) {
+			char* zeros_str = calloc(zeros, sizeof(char));
+			sprintf(out_str, "%s%s", zeros_str, temp_str);
+			free(zeros_str);
+		} else
+			sprintf(out_str, "%s", temp_str);
+		
+		// null terminate
+		out_str[data->digits] = '\0';
+		
+		free(temp_str);
+	}
 	free(hmac);
 	free(byte_string);
 	free(byte_secret);
@@ -159,6 +164,8 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 	Returns 0 on error, 1 on success
 */
 int otp_byte_secret(OTPData* data, int size, char* out_str) {
+	if(out_str == NULL)
+		return 0;
 	if(size % 8 != 0) {
 		printf("size mismatch.");
 		return 0;
@@ -174,12 +181,17 @@ int otp_byte_secret(OTPData* data, int size, char* out_str) {
 	The out_str should be 9 long, where the 8 are memset to 0.
 	The 9 is '\0'. The implementation requires 4 bytes of padding extra.
 	Only use can use ascii (0-255).
+	
+	Returns 0 on error, 1 on success
 */
-void otp_int_to_bytestring(int integer, char* out_str) {
+int otp_int_to_bytestring(int integer, char* out_str) {
+	if(out_str == NULL)
+		return 0;
 	out_str[4] = integer >> 24;
 	out_str[4+1] = integer >> 16;
 	out_str[4+2] = integer >> 8;
 	out_str[4+3] = integer;
+	return 1;
 }
 
 /*
@@ -188,12 +200,17 @@ void otp_int_to_bytestring(int integer, char* out_str) {
 	Using a list of letters, generates a BASE32.
 	Ensure that srand(time(NULL)) is called before this.
 	Puts the result in out_str without null termination.
+	
+	Returns 0 on error, 1 on success
 */
-void otp_random_base32(int len, const char* chars, char* out_str) {
+int otp_random_base32(int len, const char* chars, char* out_str) {
+	if(chars == NULL || out_str == NULL)
+		return 0;
 	len = len > 0 ? len : 16;
 	int i;
 	for (i=0; i<len; i++)
 		out_str[i] = chars[rand()%32];
+	return 1;
 }
 
 
@@ -203,7 +220,7 @@ void otp_random_base32(int len, const char* chars, char* out_str) {
 	Returns (1) true, (0) false if a key matches.
 	See totp_verify.
 	
-	Returns 0 on fail.
+	Returns 0 on fail, 1 on success.
 	
 	TODO: implement an expensive version to prevent mass iterations to crack
 */
@@ -240,7 +257,7 @@ int totp_compare(OTPData* data, int key, int increment, int for_time) {
 	See otp_generate for more info.
 	Puts the result in out_str without null termination.
 	
-	Returns 0 on fail.
+	Returns 0 on fail, a otp on success.
 */
 int totp_at(OTPData* data, int for_time, int counter_offset, char* out_str) {
 	return otp_generate(data, totp_timecode(data, for_time) + counter_offset, out_str);
@@ -252,7 +269,7 @@ int totp_at(OTPData* data, int for_time, int counter_offset, char* out_str) {
 	See otp_generate for more info.
 	Puts the result in out_str without null termination.
 	
-	Returns 0 on fail.
+	Returns 0 on fail, a otp on success.
 */
 int totp_now(OTPData* data, char* out_str) {
 	return otp_generate(data, totp_timecode(data, time(NULL)), out_str);
@@ -261,7 +278,8 @@ int totp_now(OTPData* data, char* out_str) {
 /*
 	Verifies if a code falls within blocks defined by using timecode.
 	See timecode for explanation on these time blocks.
-	Returns a (1)true, or (0)false number if a key matches one of the
+	
+	Returns a 0 on fail, 1 if a key matches one of the
 	  time-generated keys.
 */
 int totp_verify(OTPData* data, int key, int for_time, int valid_window) {
@@ -291,9 +309,12 @@ int totp_verify(OTPData* data, int key, int for_time, int valid_window) {
 	  using totp_verify's valid_window int by multiples.
 	  For example,
 	    30 second intervals
-		totp_verify checks 5 (-2,-1,0,1,2) time blocks
+		totp_verify checks (-2,-1,0,1,2) time blocks of range of timecode
 		The checked time blocks are relative to the base block
 		  given in for_time int of totp_verify
+		So this makes it so each 30 seconds, a count of +1 is added to
+		  the result of this function. If interval was 20, +1 every
+		  20 seconds.
 */
 int totp_timecode(OTPData* data, int for_time) {
 	return for_time/data->interval;
@@ -319,7 +340,6 @@ int hotp_compare(OTPData* data, int key, int counter) {
 	hotp_at(data, counter, cnt_str);
 	int i;
 	for (i=0; i<8; i++) {
-		printf("|%c| cmp |%c|\n", key_str[i], cnt_str[i]);
 		if(key_str[i] != cnt_str[i]) {
 			free(cnt_str);
 			free(key_str);
