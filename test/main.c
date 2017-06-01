@@ -18,7 +18,7 @@ int hmac_algo(const char byte_secret[], const char byte_string[], char out[]) {
 	
 }
 
-int main(int arc, char** argv) {
+int main(int argc, char** argv) {
 
 	//srand(time(NULL));
 	const char base32_secret[] = "JBSWY3DPEHPK3PXP";
