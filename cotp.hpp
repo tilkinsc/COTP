@@ -12,7 +12,7 @@ extern "C" {
 class OTP {
 	
 	// data structure should be untouched. It is managed by functions.
-	// don't forget to clean it up using free() if it is global (outside of main)
+	// don't forget to clean it up using free() if it is global and unneeded,
 	// or let the deconstructor do its job out of scope
 	protected:
 		OTPData* data;
