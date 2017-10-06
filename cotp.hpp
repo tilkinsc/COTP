@@ -1,6 +1,8 @@
 
 #pragma once
 
+#if defined(__cplusplus)
+
 extern "C" {
 	#include "cotp.h"
 }
@@ -18,7 +20,7 @@ class OTP {
 		OTPData* data;
 		
 	public:
-		OTP(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits) {
+		OTP(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits) {
 			data = otp_new(base32_secret, bits, algo, digest, digits);
 		}
 		~OTP() {
@@ -33,19 +35,19 @@ class OTP {
 		}
 		
 		// converts the byte secret from base32 to the actual data
-		int byte_secret(int size, char* out_str) {
+		int byte_secret(size_t size, char* out_str) {
 			return otp_byte_secret(data, size, out_str);
 		}
 		
 		// used internally, generates a byte string out of an 4-byte int
 		// ints need to be at least 4 bytes.
 		int int_to_bytestring(int integer, char* out_str) {
-			otp_int_to_bytestring(integer, out_str);
+			return otp_int_to_bytestring(integer, out_str);
 		}
 		
 		// generates a random base32 code
-		int random_base32(int len, const char* chars, char* out_str) {
-			otp_random_base32(len, chars, out_str);
+		int random_base32(size_t len, const char* chars, char* out_str) {
+			return otp_random_base32(len, chars, out_str);
 		}
 		
 		// returns the default characters used to generate a base32 code
@@ -64,13 +66,13 @@ class OTP {
 class TOTP : public OTP {
 	
 	public:
-		TOTP(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits, int interval)
+		TOTP(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits, size_t interval)
 				: OTP(base32_secret, bits, algo, digest, digits) {
 			data = totp_new(base32_secret, bits, algo, digest, digits, interval);
 		}
 		
 		// generates a code at a certain timecode
-		int at(int for_time, int counter_offset, char* out_str) {
+		int at(unsigned int for_time, size_t counter_offset, char* out_str) {
 			return totp_at(data, for_time, counter_offset, out_str);
 		}
 		
@@ -83,12 +85,12 @@ class TOTP : public OTP {
 		// hid the function totp_compare, no practical use. Is used internally.
 		
 		// verifys an otp for the timecode given in a valid window
-		int verify(int key, int for_time, int valid_window) {
+		int verify(int key, unsigned int for_time, size_t valid_window) {
 			return totp_verify(data, key, for_time, valid_window);
 		}
 		
 		// generates a timecode for the given time
-		int timecode(int for_time) {
+		int timecode(unsigned int for_time) {
 			return totp_timecode(data, for_time);
 		}
 		
@@ -98,7 +100,7 @@ class HOTP : public OTP {
 	
 	public:
 		
-		HOTP(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits)
+		HOTP(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits)
 				: OTP(base32_secret, bits, algo, digest, digits) {
 			data = hotp_new(base32_secret, bits, algo, digest, digits);
 		}
@@ -106,14 +108,18 @@ class HOTP : public OTP {
 		// hid the function hotp_compare, no practical use. Is used internally.
 		
 		// generates a otp at a certain number (number of hits)
-		int at(int counter, char* out_str) {
+		int at(size_t counter, char* out_str) {
 			return hotp_at(data, counter, out_str);
 		}
 		
 		// verifies the key generated with the current counter server-side
-		int verify(int key, int counter) {
+		int verify(int key, size_t counter) {
 			return hotp_verify(data, key, counter);
 		}
 	
 };
+
+#else
+#	error "cotp.hpp is a C++ header. __cplusplus not defined."
+#endif
 

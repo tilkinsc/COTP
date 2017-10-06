@@ -31,11 +31,11 @@ int main(int argc, char** argv) {
 	
 	// Print the stuff in OTPData
 	printf("// data //\n");
-	printf("Digits: %d\n", data->digits);
-	printf("Interval: %d\n", data->interval);
-	printf("Method: %d\n", data->method);
+	printf("Digits: %Iu\n", data->digits);
+	printf("Interval: %Iu\n", data->interval);
+	printf("Method: %u\n", data->method);
 	
-	printf("Bits: %d\n", data->bits);
+	printf("Bits: %Iu\n", data->bits);
 	printf("Digest: %s\n", data->digest);
 	printf("Secret: %s\n", data->base32_secret);
 	printf("// data //\n");
@@ -43,13 +43,12 @@ int main(int argc, char** argv) {
 	
 	
 	// Do a TOTP example
-	// char code[data.digits+1];
-	// memset(code, 0, data.digits+1);
-	// totp_now(&data, code);
+	char code[data->digits+1];
+	memset(code, 0, data->digits+1);
+	totp_now(data, code);
+	printf("OTP Generated: %s\n", code);
 	
-	// printf("OTP Generated: %s\n", code);
-	
-	int bol = totp_verify(data, 600223, time(NULL), 4);
+	int bol = totp_verify(data, 656562, time(NULL), 4);
 	printf("Successfull? %d\n", bol);
 	
 	// Do a HOTP example

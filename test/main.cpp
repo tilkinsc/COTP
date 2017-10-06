@@ -9,6 +9,8 @@ extern "C" {
 #include <iostream>
 #include <string.h>
 
+#include <time.h>
+
 using namespace std;
 
 int hmac_algo(const char* byte_secret, const char* byte_string, char* out) {
@@ -21,7 +23,7 @@ int hmac_algo(const char* byte_secret, const char* byte_string, char* out) {
 
 int main(void) {
 	
-	class TOTP totp{"JBSWY3DPEHPK3PXP", 160, hmac_algo, "sha1", 6, 30};
+	class TOTP totp{"JBSWY3DPEHPK3PXP", 160, hmac_algo, "SHA1", 6, 30};
 	
 	char code[7];
 	memset(code, 0, 7);
@@ -29,6 +31,12 @@ int main(void) {
 	
 	cout << code << endl;
 	cout << ncode << endl;
+	
+	int succ = totp.verify(604645, time(NULL), 4);
+	
+	cout << "success?: " << succ << endl;
+	
+	totp.free();
 	
 	return 0;
 }

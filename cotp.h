@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <stdlib.h>
 
 /*
 	Default characters used in BASE32 digests.
@@ -61,9 +62,9 @@ typedef int (*COTP_ALGO)(const char*, const char*, char*);
 	  communicating securely. See otp_random_base32.
 */
 typedef struct OTPData {
-	int digits;
-	int interval; // TOTP exclusive
-	int bits;
+	size_t digits;
+	size_t interval; // TOTP exclusive
+	size_t bits;
 	OTPType method;
 	COTP_ALGO algo;
 	
@@ -75,9 +76,9 @@ typedef struct OTPData {
 /*
 	Struct initialization functions
 */
-OTPData* otp_new(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits);
-OTPData* totp_new(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits, int interval);
-OTPData* hotp_new(const char* base32_secret, int bits, COTP_ALGO algo, const char* digest, int digits);
+OTPData* otp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits);
+OTPData* totp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits, size_t interval);
+OTPData* hotp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits);
 
 /*
 	OTP free function
@@ -88,25 +89,27 @@ void otp_free(OTPData* data);
 	OTP functions
 */
 int otp_generate(OTPData* data, int input, char* out_str);
-int otp_byte_secret(OTPData* data, int size, char* out_str);
+int otp_byte_secret(OTPData* data, size_t size, char* out_str);
 int otp_int_to_bytestring(int integer, char* out_str);
-int otp_random_base32(int len, const char* chars, char* out_str);
+int otp_random_base32(size_t len, const char* chars, char* out_str);
 
 
 /*
 	TOTP functions
 */
-int totp_compare(OTPData* data, int key, int increment, int for_time);
-int totp_at(OTPData* data, int for_time, int counter_offset, char* out_str);
+int totp_compares(OTPData* data, char* key, size_t increment, unsigned int for_time);
+int totp_comparei(OTPData* data, int key, size_t increment, unsigned int for_time);
+int totp_at(OTPData* data, unsigned int for_time, size_t counter_offset, char* out_str);
 int totp_now(OTPData* data, char* out_str);
-int totp_verify(OTPData* data, int key, int for_time, int valid_window);
-int totp_timecode(OTPData* data, int for_time);
+int totp_verify(OTPData* data, int key, unsigned int for_time, int valid_window);
+int totp_timecode(OTPData* data, unsigned int for_time);
 
 
 /*
 	HOTP functions
 */
-int hotp_compare(OTPData* data, int key, int counter);
-int hotp_at(OTPData* data, int counter, char out_str[]);
-int hotp_verify(OTPData* data, int key, int counter);
+int hotp_compares(OTPData* data, char* key, size_t counter);
+int hotp_comparei(OTPData* data, int key, size_t counter);
+int hotp_at(OTPData* data, size_t counter, char out_str[]);
+int hotp_verify(OTPData* data, int key, size_t counter);
 
