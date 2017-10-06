@@ -28,6 +28,12 @@ class OTP {
 			data = nullptr;
 		}
 		
+		// returns data struct for serialization or something
+		// discouraged to use this class and separate the struct
+		OTPData* getDataStruct() {
+			return data;
+		}
+		
 		// generates an otp
 		// returns the integer, outputs the string version via output var
 		int generate(int input, char* output) {
