@@ -58,7 +58,7 @@ class OTP {
 		
 		// returns the default characters used to generate a base32 code
 		const char* getDefaultChars() {
-			return otp_DEFAULT_CHARS;
+			return otp_DEFAULT_BASE32_CHARS;
 		}
 		
 		// shouldn't have to use this function, unless you have a global OTP/TOTP/HOTP variable

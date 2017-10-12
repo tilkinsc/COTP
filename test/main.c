@@ -10,58 +10,161 @@
 #include <openssl/hmac.h>
 
 
-int hmac_algo(const char byte_secret[], const char byte_string[], char out[]) {
+// byte_secret is unbase32 key
+// byte_string is data to be HMAC'd
+int hmac_algo_sha1(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	unsigned int len = 20;
+	// output len
+	unsigned int len = SHA1_BYTES;
 	
-	return HMAC(EVP_sha1(), (unsigned char*)byte_secret, 10, (unsigned char*)byte_string, 8, (unsigned char*)out, &len) == NULL ? 0 : 1;
-	
+	// return the HMAC success
+	return HMAC(
+			EVP_sha1(),											// algorithm
+			(unsigned char*)byte_secret, 10,	// key
+			(unsigned char*)byte_string, 8,	// data
+			(unsigned char*)out, &len) == 0 ? 0 : 1;			// output
 }
 
+int hmac_algo_sha256(const char byte_secret[], const char byte_string[], char out[]) {
+	
+	// output len
+	unsigned int len = SHA256_BYTES;
+	
+	// return the HMAC success
+	return HMAC(
+			EVP_sha256(),										// algorithm
+			(unsigned char*)byte_secret, strlen(byte_secret),	// key
+			(unsigned char*)byte_string, strlen(byte_string),	// data
+			(unsigned char*)out, &len) == 0 ? 0 : 1;			// output
+}
+
+int hmac_algo_sha512(const char byte_secret[], const char byte_string[], char out[]) {
+	
+	// output len
+	unsigned int len = SHA512_BYTES;
+	
+	// return the HMAC success
+	return HMAC(
+			EVP_sha512(),										// algorithm
+			(unsigned char*)byte_secret, strlen(byte_secret),	// key
+			(unsigned char*)byte_string, strlen(byte_string),	// data
+			(unsigned char*)out, &len) == 0 ? 0 : 1;			// output
+}
+
+
+
 int main(int argc, char** argv) {
-
-	//srand(time(NULL));
-	const char base32_secret[] = "JBSWY3DPEHPK3PXP";
-	//otp_random_base32(16, default_chars, base32_secret);
 	
-	// for OTP generation
-	const char digest[] = "SHA1";
+	////////////////////////////////////////////////////////////////
+	// Initialization Stuff                                       //
+	////////////////////////////////////////////////////////////////
 	
-	OTPData* data = totp_new(base32_secret, 160, hmac_algo, digest, 6, 30);
-	
-	// Print the stuff in OTPData
-	printf("// data //\n");
-	printf("Digits: %Iu\n", data->digits);
-	printf("Interval: %Iu\n", data->interval);
-	printf("Method: %u\n", data->method);
-	
-	printf("Bits: %Iu\n", data->bits);
-	printf("Digest: %s\n", data->digest);
-	printf("Secret: %s\n", data->base32_secret);
-	printf("// data //\n");
+	const int INTERVAL	= 30;
+	const int DIGITS	= 6;
 	
 	
+	// Base32 secret to utilize
+	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP";
 	
-	// Do a TOTP example
-	char code[data->digits+1];
-	memset(code, 0, data->digits+1);
-	totp_now(data, code);
-	printf("OTP Generated: %s\n", code);
+	// Seed random generator
+	srand(time(NULL));
+	// TODO: generate a new base32 key
 	
-	int bol = totp_verify(data, 656562, time(NULL), 4);
-	printf("Successfull? %d\n", bol);
 	
-	// Do a HOTP example
-	// char code[data.digits+1];
-	// memset(code, 0, data.digits+1);
-	// hotp_at(&data, 1, code);
-
-	// printf("HOTP Code: %s\n", code);
+	// Create OTPData struct, which decides the environment
+	OTPData* tdata = totp_new(
+				BASE32_SECRET,
+				SHA1_BITS,
+				hmac_algo_sha1,
+				SHA1_DIGEST,
+				DIGITS,
+				INTERVAL);
 	
-	// char ho1 = hotp_verify(&data, 996554, 1);
-	// printf("Successfull? %d\n", ho1);
+	OTPData* hdata = hotp_new(
+				BASE32_SECRET,
+				SHA1_BITS,
+				hmac_algo_sha1,
+				SHA1_DIGEST,
+				DIGITS);
 	
-	otp_free(data);
+	// Dump data members of struct OTPData tdata
+	printf("\\\\ totp tdata \\\\\n");
+	printf("tdata->digits: `%Iu`\n", tdata->digits);
+	printf("tdata->interval: `%Iu`\n", tdata->interval);
+	printf("tdata->bits: `%Iu`\n", tdata->bits);
+	printf("tdata->method: `%u`\n", tdata->method);
+	printf("tdata->algo: `0x%p`\n", tdata->algo);
+	printf("tdata->digest: `%s`\n", tdata->digest);
+	printf("tdata->base32_secret: `%s`\n", tdata->base32_secret);
+	printf("// totp tdata //\n\n");
+	
+	// Dump data members of struct OTPData hdata
+	printf("\\\\ hotp hdata \\\\\n");
+	printf("hdata->digits: `%Iu`\n", hdata->digits);
+	printf("hdata->bits: `%Iu`\n", hdata->bits);
+	printf("hdata->method: `%u`\n", hdata->method);
+	printf("hdata->algo: `0x%p`\n", hdata->algo);
+	printf("hdata->digest: `%s`\n", hdata->digest);
+	printf("hdata->base32_secret: `%s`\n", hdata->base32_secret);
+	printf("// hotp hdata //\n\n");
+	
+	printf("Current Time: `%Iu`'\n", time(NULL));
+	
+	////////////////////////////////////////////////////////////////
+	// BASE32 Stuff                                               //
+	////////////////////////////////////////////////////////////////
+	
+	
+	
+	////////////////////////////////////////////////////////////////
+	// TOTP Stuff                                                 //
+	////////////////////////////////////////////////////////////////
+	
+	// Get TOTP for current time block
+	//   1. Reserve memory and ensure it's null-terminated
+	//   2. Generate and load totp key into tcode
+	//   3. Check for error
+	//   4. Free data
+	char* tcode = calloc(DIGITS+1, sizeof(char));
+	int totp_err_1 = totp_now(tdata, tcode);
+	if(totp_err_1 == 0) {
+		puts("TOTP Error 1");
+		return 1;
+	}
+	printf("TOTP Generated: `%s`\n", tcode);
+	free(tcode);
+	
+	
+	// Do a verification for a hardcoded code
+	int tv = totp_verify(tdata, 576203, time(NULL), 4);
+	printf("Hardcoded Verification: `%d`\n", tv);
+	
+	////////////////////////////////////////////////////////////////
+	// HOTP Stuff                                                 //
+	////////////////////////////////////////////////////////////////
+	
+	// Get HOTP for token 1
+	//   1. Reserve memory and ensure it's null-terminated
+	//   2. Generated and load hotp key into hcode
+	//   3. Check for error
+	//   3. Free data
+	char* hcode = calloc(8+1, sizeof(char));
+	int hotp_err_1 = hotp_at(hdata, 1, hcode);
+	if(hotp_err_1 == 0) {
+		puts("HOTP Error 1");
+		return 1;
+	}
+	printf("HOTP Generated at 1: `%s`\n", hcode);
+	free(hcode);
+	
+	// Do a verification for a hardcoded code
+	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
+	// TODO: why did we get 915634
+	char hv = hotp_verify(hdata, 996554, 1);
+	printf("Hardcoded Verification: `%d`\n", hv);
+	
+	otp_free(hdata);
+	otp_free(tdata);
 	
 	return 0;
 }

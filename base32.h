@@ -42,6 +42,11 @@
  */
 #define UNBASE32_LEN(len)  (((len)/8)*5)
 
+static inline size_t base32_min(size_t x, size_t y)
+{
+	return x < y ? x : y;
+}
+
 /**
  * Encode the data pointed to by plain into base32 and store the
  * result at the address pointed to by coded. The "coded" argument

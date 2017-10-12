@@ -22,10 +22,9 @@
  * THE SOFTWARE.
  **/
 
-#include <assert.h>  // assert()
-#include <limits.h>  // CHAR_BIT
-
 #include "base32.h"
+
+#include <stdio.h>
 
 /**
  * Let this be a sequence of plain data before encoding:
@@ -43,11 +42,6 @@
  * 8 bits quantities. This implementation will probably not work properly on
  * systems that don't have exactly 8 bits per (unsigned) char.
  **/
-
-static size_t min(size_t x, size_t y)
-{
-	return x < y ? x : y;
-}
 
 static const unsigned char PADDING_CHAR = '=';
 
@@ -72,7 +66,7 @@ static unsigned char encode_char(unsigned char c)
 
 /**
  * Decode given character into a 5 bits value. 
- * Returns -1 iff the argument given was an invalid base32 character
+ * Returns -1 if the argument given was an invalid base32 character
  * or a padding character.
  */
 static int decode_char(unsigned char c)
@@ -84,8 +78,6 @@ static int decode_char(unsigned char c)
 	if (c >= '2' && c <= '7')
 		retval = c - '2' + 26;
 
-	assert(retval == -1 || ((retval & 0x1F) == retval));
-
 	return  retval;
 }
 
@@ -94,6 +86,7 @@ static int decode_char(unsigned char c)
  * the octet in which this block starts. For example, given 3 it will return 1
  * because block 3 starts in octet 1:
  *
+ *  01234567 01234567
  * +--------+--------+
  * | ......<|.3 >....|
  * +--------+--------+
@@ -101,7 +94,6 @@ static int decode_char(unsigned char c)
  */
 static int get_octet(int block)
 {
-	assert(block >= 0 && block < 8);
 	return (block*5) / 8;
 }
 
@@ -124,7 +116,6 @@ static int get_octet(int block)
  **/
 static int get_offset(int block)
 {
-	assert(block >= 0 && block < 8);
 	return (8 - 5 - (5*block) % 8);
 }
 
@@ -154,9 +145,6 @@ static unsigned char shift_left(unsigned char byte, char offset)
  */
 static void encode_sequence(const unsigned char *plain, int len, unsigned char *coded)
 {
-	assert(CHAR_BIT == 8);  // not sure this would work otherwise
-	assert(len >= 0 && len <= 5);
-
 	for (int block = 0; block < 8; block++) {
 		int octet = get_octet(block);  // figure out which octet this block starts in
 		int junk = get_offset(block);  // how many bits do we drop from this octet?
@@ -169,7 +157,7 @@ static void encode_sequence(const unsigned char *plain, int len, unsigned char *
 		unsigned char c = shift_right(plain[octet], junk);  // first part
 
 		if (junk < 0  // is there a second part?
-		&&  octet < len - 1)  // is there still something to read?
+			&&  octet < len - 1)  // is there still something to read?
 		{
 			c |= shift_right(plain[octet+1], 8 + junk);
 		}
@@ -181,30 +169,26 @@ void base32_encode(const unsigned char *plain, size_t len, unsigned char *coded)
 {
 	// All the hard work is done in encode_sequence(),
 	// here we just need to feed it the data sequence by sequence.
-	for (size_t i = 0, j = 0; i < len; i += 5, j += 8) {
-		encode_sequence(&plain[i], min(len - i, 5), &coded[j]);
-	}
+	for (size_t i = 0, j = 0; i < len; i += 5, j += 8)
+		encode_sequence(&plain[i], base32_min(len - i, 5), &coded[j]);
 }
 
 static int decode_sequence(const unsigned char *coded, unsigned char *plain)
 {
-	assert(CHAR_BIT == 8);
-	assert(coded && plain);
-
 	plain[0] = 0;
 	for (int block = 0; block < 8; block++) {
 		int offset = get_offset(block);
 		int octet = get_octet(block);
 
 		int c = decode_char(coded[block]);
+		printf("This is what C is (block: %d): %d\n", block, c);
 		if (c < 0)  // invalid char, stop here
 			return octet;
-
+		
 		plain[octet] |= shift_left(c, offset);
-		if (offset < 0) {  // does this block overflows to next octet?
-			assert(octet < 4);
+		printf("out_str: %d\n", plain[octet]);
+		if (offset < 0)  // does this block overflows to next octet?
 			plain[octet+1] = shift_left(c, 8 + offset);
-		}
 	}
 	return 5;
 }
@@ -218,4 +202,5 @@ size_t base32_decode(const unsigned char *coded, unsigned char *plain)
 		if (n < 5)
 			return written;
 	}
+	return 0;
 }
