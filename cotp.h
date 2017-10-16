@@ -34,6 +34,10 @@ static const char SHA1_DIGEST[]   = "SHA1";
 static const char SHA256_DIGEST[] = "SHA256";
 static const char SHA512_DIGEST[] = "SHA512";
 
+static const char OTP_CHARS[]  = "otp";
+static const char TOTP_CHARS[] = "totp";
+static const char HOTP_CHARS[] = "hotp";
+
 
 /*
 	Used for differentiation on which

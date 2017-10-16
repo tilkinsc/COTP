@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include "../cotp.h"
+#include "../otpuri.h"
 
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -86,6 +87,16 @@ int main(int argc, char** argv) {
 				hmac_algo_sha1,
 				SHA1_DIGEST,
 				DIGITS);
+	
+	// Show example of URIs
+	char* uri = otpuri_build_uri(tdata, "name1", "account@whatever1.com", 0);
+	printf("%s\n", uri);
+	free(uri);
+	
+	size_t counter = 52; // for example
+	uri = otpuri_build_uri(hdata, "name2", "account@whatever2.com", counter);
+	printf("%s\n", uri);
+	free(uri);
 	
 	// Dump data members of struct OTPData tdata
 	printf("\\\\ totp tdata \\\\\n");

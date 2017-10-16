@@ -353,7 +353,8 @@ int hotp_verify(OTPData* data, int key, size_t counter) {
 	//   low security requirements - as long as the login checks are limited
 	//   absolutely no hacking is possible. Hacking SHA is impossible anyways
 	//   especially with this method, as there is no way to tell if a SHA
-	//   key generation is valid for the given input.
+	//   key generation is valid for the given input or just a temp collision.
+	//   Should make new functions for this though.
 */
 int otp_generate(OTPData* data, int input, char* out_str) {
 	if(input < 0) return 0;
