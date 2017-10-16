@@ -11,45 +11,46 @@
 #include <openssl/hmac.h>
 
 
+
 // byte_secret is unbase32 key
 // byte_string is data to be HMAC'd
 int hmac_algo_sha1(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	// output len
+	// Output len
 	unsigned int len = SHA1_BYTES;
 	
-	// return the HMAC success
+	// Return the HMAC success
 	return HMAC(
-			EVP_sha1(),											// algorithm
-			(unsigned char*)byte_secret, 10,	// key
-			(unsigned char*)byte_string, 8,	// data
-			(unsigned char*)out, &len) == 0 ? 0 : 1;			// output
+			EVP_sha1(),									// algorithm
+			(unsigned char*)byte_secret, 10,			// key
+			(unsigned char*)byte_string, 8,				// data
+			(unsigned char*)out, &len) == 0 ? 0 : 1;	// output
 }
 
 int hmac_algo_sha256(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	// output len
+	// Output len
 	unsigned int len = SHA256_BYTES;
 	
-	// return the HMAC success
+	// Return the HMAC success
 	return HMAC(
-			EVP_sha256(),										// algorithm
-			(unsigned char*)byte_secret, strlen(byte_secret),	// key
-			(unsigned char*)byte_string, strlen(byte_string),	// data
-			(unsigned char*)out, &len) == 0 ? 0 : 1;			// output
+			EVP_sha256(),								// algorithm
+			(unsigned char*)byte_secret, 10,			// key
+			(unsigned char*)byte_string, 8,				// data
+			(unsigned char*)out, &len) == 0 ? 0 : 1;	// output
 }
 
 int hmac_algo_sha512(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	// output len
+	// Output len
 	unsigned int len = SHA512_BYTES;
 	
-	// return the HMAC success
+	// Return the HMAC success
 	return HMAC(
-			EVP_sha512(),										// algorithm
-			(unsigned char*)byte_secret, strlen(byte_secret),	// key
-			(unsigned char*)byte_string, strlen(byte_string),	// data
-			(unsigned char*)out, &len) == 0 ? 0 : 1;			// output
+			EVP_sha512(),								// algorithm
+			(unsigned char*)byte_secret, 10,			// key
+			(unsigned char*)byte_string, 8,				// data
+			(unsigned char*)out, &len) == 0 ? 0 : 1;	// output
 }
 
 
@@ -66,10 +67,6 @@ int main(int argc, char** argv) {
 	
 	// Base32 secret to utilize
 	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP";
-	
-	// Seed random generator
-	srand(time(NULL));
-	// TODO: generate a new base32 key
 	
 	
 	// Create OTPData struct, which decides the environment
@@ -88,15 +85,6 @@ int main(int argc, char** argv) {
 				SHA1_DIGEST,
 				DIGITS);
 	
-	// Show example of URIs
-	char* uri = otpuri_build_uri(tdata, "name1", "account@whatever1.com", 0);
-	printf("%s\n", uri);
-	free(uri);
-	
-	size_t counter = 52; // for example
-	uri = otpuri_build_uri(hdata, "name2", "account@whatever2.com", counter);
-	printf("%s\n", uri);
-	free(uri);
 	
 	// Dump data members of struct OTPData tdata
 	printf("\\\\ totp tdata \\\\\n");
@@ -121,9 +109,43 @@ int main(int argc, char** argv) {
 	
 	printf("Current Time: `%Iu`'\n", time(NULL));
 	
+	
+	
+	////////////////////////////////////////////////////////////////
+	// URI Example                                                //
+	////////////////////////////////////////////////////////////////
+	
+	char name1[] = "name1";
+	char name2[] = "name2";
+	char whatever1[] = "account@whatever1.com";
+	char whatever2[] = "account@whatever2.com";
+	
+	// Show example of URIs
+	char* uri = otpuri_build_uri(tdata, name1, whatever1, 0);
+	printf("TOTP URI: `%s`\n\n", uri);
+	free(uri);
+	
+	size_t counter = 52; // for example
+	uri = otpuri_build_uri(hdata, name2, whatever2, counter);
+	printf("HOTP URI: `%s`\n\n", uri);
+	free(uri);
+	
+	
+	
 	////////////////////////////////////////////////////////////////
 	// BASE32 Stuff                                               //
 	////////////////////////////////////////////////////////////////
+	
+	// Seed random generator
+	srand(time(NULL));
+	
+	const int base32_len = 16;
+	
+	// Generate random base32
+	char* base32_new_secret = malloc(base32_len + 1 * sizeof(char));
+	otp_random_base32(base32_len, otp_DEFAULT_BASE32_CHARS, base32_new_secret);
+	base32_new_secret[base32_len] = '\0';
+	printf("Generated BASE32 Secret: `%s`\n", base32_new_secret);
 	
 	
 	
@@ -142,13 +164,16 @@ int main(int argc, char** argv) {
 		puts("TOTP Error 1");
 		return 1;
 	}
-	printf("TOTP Generated: `%s`\n", tcode);
+	printf("TOTP Generated: `%s` `%d`\n", tcode, totp_err_1);
 	free(tcode);
 	
 	
 	// Do a verification for a hardcoded code
+	// Won't succeed, this code is for a time far far away
 	int tv = totp_verify(tdata, 576203, time(NULL), 4);
-	printf("Hardcoded Verification: `%d`\n", tv);
+	printf("Hardcoded Verification: `%s`\n", tv == 0 ? "false" : "true");
+	
+	
 	
 	////////////////////////////////////////////////////////////////
 	// HOTP Stuff                                                 //
@@ -165,14 +190,15 @@ int main(int argc, char** argv) {
 		puts("HOTP Error 1");
 		return 1;
 	}
-	printf("HOTP Generated at 1: `%s`\n", hcode);
+	printf("HOTP Generated at 1: `%s` `%d`\n", hcode, hotp_err_1);
 	free(hcode);
 	
 	// Do a verification for a hardcoded code
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
-	// TODO: why did we get 915634
-	char hv = hotp_verify(hdata, 996554, 1);
-	printf("Hardcoded Verification: `%d`\n", hv);
+	int hv = hotp_verify(hdata, 996554, 1);
+	printf("Hardcoded Verification: `%s`\n", hv == 0 ? "false" : "true");
+	
+	
 	
 	otp_free(hdata);
 	otp_free(tdata);
