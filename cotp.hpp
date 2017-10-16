@@ -52,12 +52,12 @@ class OTP {
 		}
 		
 		// generates a random base32 code
-		int random_base32(size_t len, const char* chars, char* out_str) {
+		static int random_base32(size_t len, const char* chars, char* out_str) {
 			return otp_random_base32(len, chars, out_str);
 		}
 		
 		// returns the default characters used to generate a base32 code
-		const char* getDefaultChars() {
+		static const char* getDefaultChars() {
 			return otp_DEFAULT_BASE32_CHARS;
 		}
 		
