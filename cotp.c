@@ -7,8 +7,6 @@
 #include <time.h>
 #include <math.h>
 
-#include "base32.h"
-
 /*
 	Allocates a new OTPData struct. Initializes its values.
 
