@@ -12,8 +12,8 @@ class OTPURI {
 	
 	public:
 		
-		static inline char* encode_url(const char* url, size_t url_len, char* protocol) {
-			return otpuri_encode_url(url, url_len, protocol);
+		static inline char* encode_url(const char* data, size_t data_len) {
+			return otpuri_encode_url(data, data_len);
 		}
 		
 		static inline char* build_uri(OTPData* data, char* issuer, char* name, size_t counter) {

@@ -3,50 +3,83 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 
 #include <string.h>
 
-char* otpuri_encode_url(const char* url, size_t url_len, char* protocol) {
+
+/*
+	Encodes given data into url-safe data. Do use a url,
+	as it will also transpose the characters that are safe/expected.
+	Null-terminates returned string.
+	
+	Returns
+			Pointer to malloc'd url-safe data string
+		Out of memory, 0
+*/
+char* otpuri_encode_url(const char* data, size_t data_len) {
 	static const char to_test[] = "\"<>#%{}|\\^~[]` ?&";
 	
-	size_t cUrl_len = url_len + 1;
-	size_t cUrl_index = 0;
-	char* cUrl = malloc(cUrl_len * sizeof(char));
+	size_t cData_len = data_len + 1;
+	size_t cData_index = 0;
+	char* cData = malloc(cData_len * sizeof(char));
+	if(cData == 0)
+		return 0;
 	
-	for (size_t i=0; i<url_len; i++) { // for each character
-		for (size_t j=0; j<strlen(to_test); j++) { // for each matching character
-			if(url[i] == to_test[j]) { // if matches, split and add encoded string
-				cUrl = realloc(cUrl, (cUrl_len + 2) * sizeof(char));
-				snprintf(cUrl + cUrl_index, 3, "%%%02X", url[i]);
-				cUrl_len += 2;
-				cUrl_index += 3;
+	for (size_t i=0; i<data_len; i++) {
+		for (size_t j=0; j<strlen(to_test); j++) {
+			if(data[i] == to_test[j]) {
+				cData = realloc(cData, (cData_len + 2) * sizeof(char));
+				if(cData == 0)
+					return 0;
+				snprintf(cData + cData_index, 3, "%%%02X", data[i]);
+				cData_len += 2;
+				cData_index += 3;
 				break;
 			}
 			if(j == strlen(to_test)-1)
-				cUrl[cUrl_index++] = url[i];
+				cData[cData_index++] = data[i];
 		}
 		
 	}
-	cUrl[url_len] = 0;
+	cData[data_len] = 0;
 	
-	return cUrl;
+	return cData;
 }
 
-char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) {
-	issuer = otpuri_encode_url(issuer, strlen(issuer), NULL);
-	name = otpuri_encode_url(name, strlen(name), NULL);
+/*
+	Builds a valid, url-safe URI which is used for applications such as QR codes.
+	Null-terminates returned string.
 	
-	char* secret = otpuri_encode_url(data->base32_secret, strlen(data->base32_secret), NULL);
-	char* digest = otpuri_encode_url(data->digest, strlen(data->digest), NULL);
+	Returns
+			url-safe URI data string
+		issuer or name == 0, 0
+		Out of memory, 0
+		
+*/
+char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) {
+	if(issuer == 0 || name == 0)
+		return 0;
+	char* cissuer = otpuri_encode_url(issuer, strlen(issuer));
+	char* cname = otpuri_encode_url(name, strlen(name));
+	
+	char* secret = otpuri_encode_url(data->base32_secret, strlen(data->base32_secret));
+	char* digest = otpuri_encode_url(data->digest, strlen(data->digest));
 	
 	char* digits = calloc(3, sizeof(char));
+	
+	char* time = 0;
+	char* args = 0;
+	
+	char* uri = 0;
+	
+	if(cissuer == 0 || cname == 0 || secret == 0 || digest == 0 || digits == 0)
+		goto exit;
+	
 	snprintf(digits, 2, "%Iu", data->digits);
 	
 	size_t arg_len = strlen("?secret=") + strlen("&issuer=") + strlen("&algorithm=") + strlen("&digits=")
-					+ strlen(secret) + strlen(issuer) + strlen(data->digest) + strlen(digits);
+					+ strlen(secret) + strlen(cissuer) + strlen(data->digest) + strlen(digits);
 	
-	char* time = 0;
 	const char* otp_type = 0;
 	switch(data->method) {
 		case TOTP:
@@ -66,34 +99,38 @@ char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) 
 		break;
 	}
 	
+	if(otp_type != OTP_CHARS && time == 0)
+		goto exit;
 	
-	char* args = calloc(arg_len + 1, sizeof(char));
+	// base_fmt + OTP/TOTP/HOTP + cissuer + cname + args
+	size_t uri_len = 13 + 4 + strlen(cissuer) + strlen(cname) + arg_len;
+	
+	args = calloc(arg_len + 1, sizeof(char));
+	uri = calloc(uri_len + 1, sizeof(char));
+	if(args == 0 || uri == 0)
+		goto exit;
+	
 	strncat(args, "?secret=", strlen("?secret="));
 	strncat(args, secret, strlen(secret));
 	strncat(args, "&issuer=", strlen("&issuer="));
-	strncat(args, issuer, strlen(issuer));
+	strncat(args, cissuer, strlen(cissuer));
 	strncat(args, "&algorithm=", strlen("&algorithm="));
 	strncat(args, digest, strlen(digest));
 	strncat(args, "&digits=", strlen("&digits="));
 	strncat(args, digits, strlen(digits));
 	if(time != 0)
 		strncat(args, time, strlen(time));
-	args[arg_len] = '\0';
 	
+	snprintf(uri, uri_len * sizeof(char), "otpauth://%s/%s:%s%s", otp_type, cissuer, cname, args);
 	
-	// (base + :) + OTP/TOTP/HOTP + issuer
-	size_t uri_len = 13 + 4 + strlen(issuer) + strlen(name) + arg_len;
-	char* uri = malloc(uri_len + 1 * sizeof(char));
-	snprintf(uri, uri_len * sizeof(char), "otpauth://%s/%s:%s%s", otp_type, issuer, name, args);
-	uri[uri_len] = '\0';
-	
+exit:
 	free(args);
 	free(time);
 	free(digits);
 	free(digest);
 	free(secret);
-	free(name);
-	free(issuer);
+	free(cname);
+	free(cissuer);
 	return uri;
 }
 
