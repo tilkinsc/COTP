@@ -240,6 +240,18 @@ int totp_verify(OTPData* data, int key, unsigned int for_time, int valid_window)
 }
 
 /*
+	Calculates using data as instructions, for time as time in seconds,
+	and valid_window as offset to for_time timeblock a time where a key
+	is alive for based off a certain time point in seconds.
+	
+	Returns
+			time in seconds relative to for_time, using data->interval
+*/
+unsigned int totp_valid_until(OTPData* data, unsigned int for_time, size_t valid_window) {
+	return for_time + (data->interval * valid_window);
+}
+
+/*
 	Generates a timeblock using data as instructions, and a time in seconds.
 	
 	Timeblocks are the amount of intervals in a given time. For example,

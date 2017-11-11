@@ -88,11 +88,16 @@ class TOTP : public OTP {
 			return totp_now(data, out_str);
 		}
 		
-		// hid the function totp_compare, no practical use. Is used internally.
+		// hid the function totp_compare, no practical use. Is used internally
 		
 		// verifys an otp for the timecode given in a valid window
 		int verify(int key, unsigned int for_time, size_t valid_window) {
 			return totp_verify(data, key, for_time, valid_window);
+		}
+		
+		// calculates time a key has to live from a point in time
+		unsigned int valid_until(unsigned int for_time, size_t valid_window) {
+			return totp_valid_until(data, for_time, valid_window);
 		}
 		
 		// generates a timecode for the given time

@@ -8,6 +8,7 @@ extern "C" {
 	#include "otpuri.h"
 }
 
+// see otpuri.c for descriptions
 class OTPURI {
 	
 	public:
