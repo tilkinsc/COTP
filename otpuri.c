@@ -17,7 +17,7 @@
 		Out of memory, 0
 */
 char* otpuri_encode_url(const char* data, size_t data_len) {
-	static const char to_test[] = "\"<>#%{}|\\^~[]` ?&";
+	static const char to_test[] = "\"<>#%@{}|\\^~[]` ?&";
 	
 	size_t cData_len = data_len + 1;
 	size_t cData_index = 0;
@@ -87,20 +87,21 @@ char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) 
 			time = calloc(strlen("&period=") + 11 + 1, sizeof(char));
 			snprintf(time, strlen("&period=") + 11 + 1, "%s%Iu", "&period=", data->interval);
 			arg_len += strlen(time);
-		break;
+			break;
 		case HOTP:
 			otp_type = HOTP_CHARS;
 			time = calloc(strlen("&counter=") + 11 + 1, sizeof(char));
 			snprintf(time, strlen("&counter=") + 11 + 1, "%s%Iu", "&counter=", counter);
 			arg_len += strlen(time);
-		break;
+			break;
 		default:
 			otp_type = OTP_CHARS;
-		break;
+			break;
 	}
 	
-	if(otp_type != OTP_CHARS && time == 0)
-		goto exit;
+	// I have no clue what this means, it seems redundant
+	// if(otp_type != OTP_CHARS && time == 0)
+		// goto exit;
 	
 	// base_fmt + OTP/TOTP/HOTP + cissuer + cname + args
 	size_t uri_len = 13 + 4 + strlen(cissuer) + strlen(cname) + arg_len;

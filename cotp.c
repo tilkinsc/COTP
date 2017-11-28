@@ -114,7 +114,7 @@ int otp_byte_secret(OTPData* data, size_t size, char* out_str) {
 int otp_int_to_bytestring(int integer, char* out_str) {
 	if(out_str == NULL)
 		return 0;
-	out_str[4] = integer >> 24; // I don't like this method of breaking down the bytes
+	out_str[4] = integer >> 24; // I don't like this method of breaking down the integer
 	out_str[4+1] = integer >> 16;
 	out_str[4+2] = integer >> 8;
 	out_str[4+3] = integer;
@@ -225,7 +225,7 @@ int totp_now(OTPData* data, char* out_str) {
 		if valid_window < 0, 0
 		error, 0
 */
-int totp_verify(OTPData* data, int key, unsigned int for_time, int valid_window) {
+int totp_verifyi(OTPData* data, int key, unsigned int for_time, int valid_window) {
 	if(valid_window < 0)
 		return 0;
 	if(valid_window > 0) {
@@ -237,6 +237,29 @@ int totp_verify(OTPData* data, int key, unsigned int for_time, int valid_window)
 		return 0;
 	}
 	return totp_comparei(data, key, 0, for_time);
+}
+
+/*
+	Compares using data as instructions, key as comparison data, for_time
+	as time in seconds, and valid_window as offset to for_time timeblock.
+	
+	Returns
+			1 success, 0 no full comparison made
+		if valid_window < 0, 0
+		error, 0
+*/
+int totp_verifys(OTPData* data, char* key, unsigned int for_time, int valid_window) {
+	if(valid_window < 0)
+		return 0;
+	if(valid_window > 0) {
+		for (int i=-valid_window; i<valid_window; i++) {
+			const int cmp = totp_compares(data, key, i, for_time);
+			if(cmp == 1)
+				return cmp;
+		}
+		return 0;
+	}
+	return totp_compares(data, key, 0, for_time);
 }
 
 /*
@@ -341,8 +364,21 @@ int hotp_at(OTPData* data, size_t counter, char* out_str) {
 			0 if hotp_comparei is unsuccessful
 		error, 0
 */
-int hotp_verify(OTPData* data, int key, size_t counter) {
+int hotp_verifyi(OTPData* data, int key, size_t counter) {
 	return hotp_comparei(data, key, counter);
+}
+
+/*
+	Needless function, for library fluency. Compares using data as instructions,
+	key as comparison data, and counter as comparison data.
+	
+	Returns
+			1 if hotp_compares is successful
+			0 if hotp_compares is unsuccessful
+		error, 0
+*/
+int hotp_verifys(OTPData* data, char* key, size_t counter) {
+	return hotp_compares(data, key, counter);
 }
 
 /*
@@ -380,7 +416,7 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 	size_t desired_secret_len = (secret_len / 8) * 5;
 	
 	// de-SHA size
-	int bit_size = data->bits/8;
+	int bit_size = data->bits / 8;
 	
 	// space for OTP byte secret de-BASE32
 	// space for converting input to byte string
@@ -396,6 +432,7 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 			|| otp_byte_secret(data, secret_len, byte_secret) == 0
 			|| (*(data->algo))(byte_secret, byte_string, hmac) == 0)
 		goto exit;
+	
 	
 	// gather hmac's offset, piece together code
 	int offset = (hmac[bit_size-1] & 0xF);

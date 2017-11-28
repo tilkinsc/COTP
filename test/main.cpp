@@ -150,32 +150,52 @@ int main(int argc, char** argv) {
 	base32_new_secret[base32_len] = '\0';
 	cout << "Generated BASE32 Secret: `" << base32_new_secret << "`" << endl;
 	
+	cout << endl; // line break for readability
 	
 	
 	////////////////////////////////////////////////////////////////
 	// TOTP Stuff                                                 //
 	////////////////////////////////////////////////////////////////
 	
-	// Get TOTP for current time block
+	// Get TOTP for a time block
 	//   1. Reserve memory and ensure it's null-terminated
 	//   2. Generate and load totp key into tcode
 	//   3. Check for error
 	//   4. Free data
+	
+	// TOTP now
 	char* tcode = (char*) calloc(DIGITS+1, sizeof(char));
 	int totp_err_1 = tdata.now(tcode);
 	if(totp_err_1 == 0) {
 		cout << "TOTP Error 1" << endl;
 		return 1;
 	}
-	cout << "TOTP Generated: `" << tcode << "`" << endl;
+	cout << "TOTP Generated: `" << tcode << "` `" << totp_err_1 << "`" << endl;
 	free(tcode);
 	
 	
-	// Do a verification for a hardcoded code
-	// Won't succeed, this code is for a tiem far far away
-	int tv = tdata.verify(576203, time(NULL), 4);
-	cout << "Hardcoded Verification: `" << (tv == 0 ? "false" : "true") << "`" << endl;
+	// TOTP at
+	char* tcode2 = (char*) calloc(DIGITS+1, sizeof(char));
+	int totp_err_2 = tdata.at(1, 0, tcode2);
+	if(totp_err_2 == 0) {
+		cout << "TOTP Error 2" << endl;
+		return 1;
+	}
+	cout << "TOTP Generated: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
+	free(tcode2);
 	
+	
+	// Do a verification for a hardcoded code
+	
+	// Won't succeed, this code is for a timeblock far into the past
+	int tv1 = tdata.verify(576203, time(NULL), 4);
+	
+	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
+	int tv2 = tdata.verify(282760, 0, 4);
+	cout << "TOTP Verification 1: `" << (tv1 == 0 ? "false" : "true") << "`" << endl;
+	cout << "TOTP Verification 2: `" << (tv2 == 0 ? "false" : "true") << "`" << endl;
+	
+	cout << endl; // line break for readability
 	
 	
 	////////////////////////////////////////////////////////////////
@@ -184,7 +204,7 @@ int main(int argc, char** argv) {
 	
 	// Get HOTP for token 1
 	//   1. Reserve memory and ensure it's null-terminated
-	//   2. Generated and load hotp key into hcode
+	//   2. Generate and load hotp key into hcode
 	//   3. Check for error
 	//   3. Free data
 	char* hcode = (char*) calloc(8+1, sizeof(char));
@@ -199,7 +219,7 @@ int main(int argc, char** argv) {
 	// Do a verification for a hardcoded code
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv = hdata.verify(996554, 1);
-	cout << "Hardcoded Verification: `" << (hv == 0 ? "false" : "true") << "`" << endl;
+	cout << "HOTP Verification 1: `" << (hv == 0 ? "false" : "true") << "`" << endl;
 	
 	
 	

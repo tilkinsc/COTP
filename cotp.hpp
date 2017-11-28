@@ -92,7 +92,12 @@ class TOTP : public OTP {
 		
 		// verifys an otp for the timecode given in a valid window
 		int verify(int key, unsigned int for_time, size_t valid_window) {
-			return totp_verify(data, key, for_time, valid_window);
+			return totp_verifyi(data, key, for_time, valid_window);
+		}
+		
+		// verifys an otp for the timecode given in a valid window
+		int verify(char* key, unsigned int for_time, size_t valid_window) {
+			return totp_verifys(data, key, for_time, valid_window);
 		}
 		
 		// calculates time a key has to live from a point in time
@@ -125,7 +130,12 @@ class HOTP : public OTP {
 		
 		// verifies the key generated with the current counter server-side
 		int verify(int key, size_t counter) {
-			return hotp_verify(data, key, counter);
+			return hotp_verifyi(data, key, counter);
+		}
+		
+		// verifies the key generated with the current counter server-side
+		int verify(char* key, size_t counter) {
+			return hotp_verifys(data, key, counter);
 		}
 	
 };
