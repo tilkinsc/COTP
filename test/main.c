@@ -147,17 +147,20 @@ int main(int argc, char** argv) {
 	base32_new_secret[base32_len] = '\0';
 	printf("Generated BASE32 Secret: `%s`\n", base32_new_secret);
 	
+	puts(""); // line break for readability
 	
 	
 	////////////////////////////////////////////////////////////////
 	// TOTP Stuff                                                 //
 	////////////////////////////////////////////////////////////////
 	
-	// Get TOTP for current time block
+	// Get TOTP for a time block
 	//   1. Reserve memory and ensure it's null-terminated
-	//   2. Generate and load totp key into tcode
+	//   2. Generate and load totp key into buffer
 	//   3. Check for error
 	//   4. Free data
+	
+	// totp_now
 	char* tcode = calloc(DIGITS+1, sizeof(char));
 	int totp_err_1 = totp_now(tdata, tcode);
 	if(totp_err_1 == 0) {
@@ -168,11 +171,28 @@ int main(int argc, char** argv) {
 	free(tcode);
 	
 	
-	// Do a verification for a hardcoded code
-	// Won't succeed, this code is for a time far far away
-	int tv = totp_verify(tdata, 576203, time(NULL), 4);
-	printf("Hardcoded Verification: `%s`\n", tv == 0 ? "false" : "true");
+	// totp_at
+	char* tcode2 = calloc(DIGITS+1, sizeof(char));
+	int totp_err_2 = totp_at(tdata, 1, 0, tcode2);
+	if(totp_err_2 == 0) {
+		puts("TOTP Error 2");
+		return 1;
+	}
+	printf("TOTP Generated: `%s` `%d`\n", tcode2, totp_err_2);
+	free(tcode2);
 	
+	
+	// Do a verification for a hardcoded code
+	
+	// Won't succeed, this code is for a timeblock far into the past
+	int tv1 = totp_verifyi(tdata, 576203, time(NULL), 4);
+	
+	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
+	int tv2 = totp_verifyi(tdata, 282760, 0, 4);
+	printf("TOTP Verification 1: `%s`\n", tv1 == 0 ? "false" : "true");
+	printf("TOTP Verification 2: `%s`\n", tv2 == 0 ? "false" : "true");
+	
+	puts(""); // line break for readability
 	
 	
 	////////////////////////////////////////////////////////////////
@@ -195,8 +215,8 @@ int main(int argc, char** argv) {
 	
 	// Do a verification for a hardcoded code
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
-	int hv = hotp_verify(hdata, 996554, 1);
-	printf("Hardcoded Verification: `%s`\n", hv == 0 ? "false" : "true");
+	int hv = hotp_verifyi(hdata, 996554, 1);
+	printf("HOTP Verification 1: `%s`\n", hv == 0 ? "false" : "true");
 	
 	
 	
