@@ -47,7 +47,7 @@ One final note: If you want me to translate the OTP language in your language, a
 
 ## Building
 
-The examples use OpenSSL with -lcrypto and -lgdi32 for cryptographic functions.
+The examples use OpenSSL with `-lcrypto` and `-lgdi32` for cryptographic functions.
 
 This was built for support with C89. See the test/build.bat file for guidance. It is simpley compiling all the CUs as C. If you don't want to use the .hpp C++ wrapper, you can extern "C" #include "cotp.h" which will flood your global space with the header file contents.
 
