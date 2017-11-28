@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
 	
 	// Get HOTP for token 1
 	//   1. Reserve memory and ensure it's null-terminated
-	//   2. Generated and load hotp key into hcode
+	//   2. Generate and load hotp key into hcode
 	//   3. Check for error
 	//   3. Free data
 	char* hcode = (char*) calloc(8+1, sizeof(char));

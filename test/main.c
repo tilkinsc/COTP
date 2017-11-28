@@ -122,12 +122,12 @@ int main(int argc, char** argv) {
 	
 	// Show example of URIs
 	char* uri = otpuri_build_uri(tdata, name1, whatever1, 0);
-	printf("TOTP URI: `%s`\n\n", uri);
+	printf("TOTP URI 1: `%s`\n\n", uri);
 	free(uri);
 	
 	size_t counter = 52; // for example
 	uri = otpuri_build_uri(hdata, name2, whatever2, counter);
-	printf("HOTP URI: `%s`\n\n", uri);
+	printf("HOTP URI 2: `%s`\n\n", uri);
 	free(uri);
 	
 	
@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
 	
 	// Get HOTP for token 1
 	//   1. Reserve memory and ensure it's null-terminated
-	//   2. Generated and load hotp key into hcode
+	//   2. Generate and load hotp key into hcode
 	//   3. Check for error
 	//   3. Free data
 	char* hcode = calloc(8+1, sizeof(char));
