@@ -41,7 +41,7 @@ char* otpuri_encode_url(const char* data, size_t data_len) {
 		}
 		
 	}
-	cData[data_len] = 0;
+	cData[cData_len - 1] = 0;
 	
 	return cData;
 }
