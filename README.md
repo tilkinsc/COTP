@@ -2,7 +2,7 @@
 
 This module is part of a chain of OTP libraries all written in different languages. See https://github.com/OTPLibraries
 
-A simple One Time Password (OTP) library in lua
+A simple One Time Password (OTP) library in C/C++
 
 Compatible with Authy and Google Authenticator. Full support for QR code url is provided.
 
@@ -17,12 +17,12 @@ In order to utilize this library, you will need the following libraries:
 
 This library works with C++, but is targeted at C. I made a .hpp header that wraps the C functions, which I find gross. Feel free to clean it up and do a pull request. I do, however, have to recommend you use the .hpp header due to namespace flooding.
 
-Make sure you mind your memsets when using the string (byte) version of the library functions. When it comes down to it, this library will convert your integer numbers to string and do a comparison byte by byte. There is no need for expensive testing - nobody knows what is going on except the key holders and the key can't be reversed because we only send a small part of the hmac. That being said, there is no support for digits > 9 yet - as this is half an int's limit.
+Make sure you mind your memsets when using the string (byte) version of the library functions. When it comes down to it, this library will convert your integer numbers to string and do a comparison byte by byte. There is no need for expensive testing - nobody knows what is going on except the key holders and the key can't be reversed because we only send a small part of the hmac. That being said, there is no support for digits > 9 yet - as this is half an int's limit. I need to switch to longs.
 
 
 ## Description
 
-This was actually a spawn off pyotp, but I would necessarily say the code was copied. Things in python aren't in lua, therefore I had to make the methods myself. However, credits will go to the module for providing a guideline of what to do. [Here](https://github.com/pyotp/pyotp) you can find pyotp and realize how different it really is.
+This was actually a spawn off pyotp, but I would necessarily say the code was copied. Things in python aren't in C/C++, therefore I had to make the methods myself. However, credits will go to the module for providing a guideline of what to do. [Here](https://github.com/pyotp/pyotp) you can find pyotp and realize how different it really is.
 
 _____________
 
@@ -56,3 +56,4 @@ This was built for support with C89. See the test/build.bat file for guidance. I
 * update comments
 * make sure all includes are organized and not redundant
 * ensure cotp.hpp is implemented correctly (since commit 97f7d83956be28a44246490806adc8e877a6eebc )
+* switch to longs/dedicated 64bit numbers
