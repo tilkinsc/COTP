@@ -20,10 +20,6 @@ This library works with C++, but is targeted at C. I made a .hpp header that wra
 Make sure you mind your memsets when using the string (byte) version of the library functions. When it comes down to it, this library will convert your integer numbers to string and do a comparison byte by byte. There is no need for expensive testing - nobody knows what is going on except the key holders and the key can't be reversed because we only send a small part of the hmac. That being said, there is no support for digits > 9 yet - as this is half an int's limit. I need to switch to longs.
 
 
-## Description
-
-This was actually a spawn off pyotp, but I would necessarily say the code was copied. Things in python aren't in C/C++, therefore I had to make the methods myself. However, credits will go to the module for providing a guideline of what to do. [Here](https://github.com/pyotp/pyotp) you can find pyotp and realize how different it really is.
-
 _____________
 
 ## License
