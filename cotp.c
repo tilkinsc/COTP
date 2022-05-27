@@ -152,7 +152,7 @@ int otp_random_base32(size_t len, const char* chars, char* out_str) {
 			1 success, 0 no full comparison made
 		error, 0
 */
-int totp_compares(OTPData* data, char* key, size_t increment, unsigned int for_time) {
+int totp_compares(OTPData* data, char* key, int increment, unsigned int for_time) {
 	char* time_str = calloc(8, sizeof(char));
 	if(totp_at(data, for_time, increment, time_str) == 0) {
 		free(time_str);
@@ -177,7 +177,7 @@ int totp_compares(OTPData* data, char* key, size_t increment, unsigned int for_t
 			1 success, 0 no full comparison made
 		error, 0
 */
-int totp_comparei(OTPData* data, int key, size_t increment, unsigned int for_time) {
+int totp_comparei(OTPData* data, int key, int increment, unsigned int for_time) {
 	char* key_str = calloc(8, sizeof(char));
 	sprintf(key_str, "%d", key);
 	int status = totp_compares(data, key_str, increment, for_time);
@@ -196,7 +196,7 @@ int totp_comparei(OTPData* data, int key, size_t increment, unsigned int for_tim
 		if out_str != 0, writes generated TOTP as string to out_str
 		error, 0
 */
-int totp_at(OTPData* data, unsigned int for_time, size_t counter_offset, char* out_str) {
+int totp_at(OTPData* data, unsigned int for_time, int counter_offset, char* out_str) {
 	return otp_generate(data, totp_timecode(data, for_time) + counter_offset, out_str);
 }
 
