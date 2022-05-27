@@ -109,8 +109,6 @@ int main(int argc, char** argv) {
 	
 	printf("Current Time: `%Iu`'\n", time(NULL));
 	
-	
-	
 	////////////////////////////////////////////////////////////////
 	// URI Example                                                //
 	////////////////////////////////////////////////////////////////
@@ -217,8 +215,6 @@ int main(int argc, char** argv) {
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv = hotp_verifyi(hdata, 996554, 1);
 	printf("HOTP Verification 1: `%s`\n", hv == 0 ? "false" : "true");
-	
-	
 	
 	otp_free(hdata);
 	otp_free(tdata);
