@@ -3,8 +3,16 @@ project(COTP LANGUAGES C CXX)
 
 option(COTP_BUILD_TESTS "Enable the tests for this project" OFF)
 option(COTP_INSTALL "Install targets of this project" OFF)
+option(COTP_COVERAGE "Enable coverage generation" OFF)
 
 set(CMAKE_C_STANDARD 99)
+
+if(COTP_COVERAGE)
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
+    endif()
+endif()
 
 # C API
 add_library(cotp cotp.c cotp.h otpuri.c otpuri.h)
