@@ -12,7 +12,10 @@ extern "C" {
 #include "../cotp.hpp"
 #include "../otpuri.hpp"
 
+
 using namespace std;
+
+
 
 // byte_secret is unbase32 key
 // byte_string is data to be HMAC'd
@@ -130,6 +133,8 @@ int main(int argc, char** argv) {
 	cout << "HOTP URI: `" << uri << "`" << endl << endl;
 	free(uri);
 	
+	
+	
 	////////////////////////////////////////////////////////////////
 	// BASE32 Stuff                                               //
 	////////////////////////////////////////////////////////////////
@@ -179,6 +184,7 @@ int main(int argc, char** argv) {
 	cout << "TOTP Generated: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
 	free(tcode2);
 	
+	
 	// Do a verification for a hardcoded code
 	
 	// Won't succeed, this code is for a timeblock far into the past
@@ -214,6 +220,8 @@ int main(int argc, char** argv) {
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv = hdata.verify(996554, 1);
 	cout << "HOTP Verification 1: `" << (hv == 0 ? "false" : "true") << "`" << endl;
+	
+	
 	
 	tdata.free();
 	hdata.free();
