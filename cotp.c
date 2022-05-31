@@ -152,7 +152,7 @@ int otp_random_base32(size_t len, const char* chars, char* out_str) {
 			1 success, 0 no full comparison made
 		error, 0
 */
-int totp_compares(OTPData* data, char* key, int increment, unsigned int for_time) {
+int totp_compares(OTPData* data, char* key, long increment, unsigned int for_time) {
 	char* time_str = calloc(8, sizeof(char));
 	if(totp_at(data, for_time, increment, time_str) == 0) {
 		free(time_str);
@@ -177,7 +177,7 @@ int totp_compares(OTPData* data, char* key, int increment, unsigned int for_time
 			1 success, 0 no full comparison made
 		error, 0
 */
-int totp_comparei(OTPData* data, int key, int increment, unsigned int for_time) {
+int totp_comparei(OTPData* data, int key, long increment, unsigned int for_time) {
 	char* key_str = calloc(8, sizeof(char));
 	sprintf(key_str, "%d", key);
 	int status = totp_compares(data, key_str, increment, for_time);
@@ -196,7 +196,7 @@ int totp_comparei(OTPData* data, int key, int increment, unsigned int for_time) 
 		if out_str != 0, writes generated TOTP as string to out_str
 		error, 0
 */
-int totp_at(OTPData* data, unsigned int for_time, int counter_offset, char* out_str) {
+int totp_at(OTPData* data, unsigned int for_time, long counter_offset, char* out_str) {
 	return otp_generate(data, totp_timecode(data, for_time) + counter_offset, out_str);
 }
 
@@ -225,7 +225,7 @@ int totp_now(OTPData* data, char* out_str) {
 		if valid_window < 0, 0
 		error, 0
 */
-int totp_verifyi(OTPData* data, int key, unsigned int for_time, int valid_window) {
+int totp_verifyi(OTPData* data, int key, unsigned int for_time, long valid_window) {
 	if(valid_window < 0)
 		return 0;
 	if(valid_window > 0) {
@@ -248,7 +248,7 @@ int totp_verifyi(OTPData* data, int key, unsigned int for_time, int valid_window
 		if valid_window < 0, 0
 		error, 0
 */
-int totp_verifys(OTPData* data, char* key, unsigned int for_time, int valid_window) {
+int totp_verifys(OTPData* data, char* key, unsigned int for_time, long valid_window) {
 	if(valid_window < 0)
 		return 0;
 	if(valid_window > 0) {
