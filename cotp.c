@@ -152,7 +152,7 @@ int otp_random_base32(size_t len, const char* chars, char* out_str) {
 			1 success, 0 no full comparison made
 		error, 0
 */
-int totp_compares(OTPData* data, char* key, long increment, unsigned int for_time) {
+int totp_compares(OTPData* data, const char* key, long increment, unsigned int for_time) {
 	char* time_str = calloc(8, sizeof(char));
 	if(totp_at(data, for_time, increment, time_str) == 0) {
 		free(time_str);
@@ -248,7 +248,7 @@ int totp_verifyi(OTPData* data, int key, unsigned int for_time, long valid_windo
 		if valid_window < 0, 0
 		error, 0
 */
-int totp_verifys(OTPData* data, char* key, unsigned int for_time, long valid_window) {
+int totp_verifys(OTPData* data, const char* key, unsigned int for_time, long valid_window) {
 	if(valid_window < 0)
 		return 0;
 	if(valid_window > 0) {
@@ -321,7 +321,7 @@ int hotp_comparei(OTPData* data, int key, size_t counter) {
 			1 success, 0 no full comparison made
 		error, 0
 */
-int hotp_compares(OTPData* data, char* key, size_t counter) {
+int hotp_compares(OTPData* data, const char* key, size_t counter) {
 	char* cnt_str = calloc(8, sizeof(char));
 	sprintf(cnt_str, "%Iu", counter);
 	if(cnt_str == 0)
@@ -377,7 +377,7 @@ int hotp_verifyi(OTPData* data, int key, size_t counter) {
 			0 if hotp_compares is unsuccessful
 		error, 0
 */
-int hotp_verifys(OTPData* data, char* key, size_t counter) {
+int hotp_verifys(OTPData* data, const char* key, size_t counter) {
 	return hotp_compares(data, key, counter);
 }
 
