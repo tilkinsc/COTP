@@ -96,12 +96,12 @@ int otp_random_base32(size_t len, const char* chars, char* out_str);
 /*
 	TOTP functions
 */
-int totp_compares(OTPData* data, char* key, size_t increment, unsigned int for_time);
-int totp_comparei(OTPData* data, int key, size_t increment, unsigned int for_time);
-int totp_at(OTPData* data, unsigned int for_time, size_t counter_offset, char* out_str);
+int totp_compares(OTPData* data, char* key, long increment, unsigned int for_time);
+int totp_comparei(OTPData* data, int key, long increment, unsigned int for_time);
+int totp_at(OTPData* data, unsigned int for_time, long counter_offset, char* out_str);
 int totp_now(OTPData* data, char* out_str);
-int totp_verifyi(OTPData* data, int key, unsigned int for_time, int valid_window);
-int totp_verifys(OTPData* data, char* key, unsigned int for_time, int valid_window);
+int totp_verifyi(OTPData* data, int key, unsigned int for_time, long valid_window);
+int totp_verifys(OTPData* data, char* key, unsigned int for_time, long valid_window);
 unsigned int totp_valid_until(OTPData* data, unsigned int for_time, size_t valid_window);
 int totp_timecode(OTPData* data, unsigned int for_time);
 
