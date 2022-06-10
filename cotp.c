@@ -254,10 +254,8 @@ int totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid
 	}
 	if(valid_window > 0) {
 		for (int64_t i=-valid_window; i<valid_window+1; i++) {
-			printf("Beep");
 			int cmp = totp_compare(data, key, i, for_time);
 			if(cmp == 1) {
-				printf("\n");
 				return cmp;
 			}
 		}

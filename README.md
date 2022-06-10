@@ -49,7 +49,5 @@ This was built for support with C89. See the test/build.bat file for guidance. I
 
 ## TODO
 
-* update comments
-* make sure all includes are organized and not redundant
-* ensure cotp.hpp is implemented correctly (since commit 97f7d83956be28a44246490806adc8e877a6eebc )
-* switch to longs/dedicated 64bit numbers
+* SHA256 is broken
+* SHA512 is broken

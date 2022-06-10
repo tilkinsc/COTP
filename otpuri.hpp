@@ -17,10 +17,9 @@ class OTPURI {
 			return otpuri_encode_url(data, data_len);
 		}
 		
-		static inline char* build_uri(OTPData* data, char* issuer, char* name, size_t counter) {
-			return otpuri_build_uri(data, issuer, name, counter);
+		static inline char* build_uri(OTPData* data, char* issuer, char* name) {
+			return otpuri_build_uri(data, issuer, name);
 		}
-	
 	
 };
 

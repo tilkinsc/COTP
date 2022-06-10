@@ -21,10 +21,10 @@ using namespace std;
 // byte_string is data to be HMAC'd
 int hmac_algo_sha1(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	// output len
+	// Output len
 	unsigned int len = SHA1_BYTES;
 	
-	// return the HMAC success
+	// Return the HMAC success
 	return HMAC(
 			EVP_sha1(),									// algorithm
 			(unsigned char*)byte_secret, 10,			// key
@@ -34,10 +34,10 @@ int hmac_algo_sha1(const char byte_secret[], const char byte_string[], char out[
 
 int hmac_algo_sha256(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	// output len
+	// Output len
 	unsigned int len = SHA256_BYTES;
 	
-	// return the HMAC success
+	// Return the HMAC success
 	return HMAC(
 			EVP_sha256(),								// algorithm
 			(unsigned char*)byte_secret, 10,			// key
@@ -47,10 +47,10 @@ int hmac_algo_sha256(const char byte_secret[], const char byte_string[], char ou
 
 int hmac_algo_sha512(const char byte_secret[], const char byte_string[], char out[]) {
 	
-	// output len
+	// Output len
 	unsigned int len = SHA512_BYTES;
 	
-	// return the HMAC success
+	// Return the HMAC success
 	return HMAC(
 			EVP_sha512(),								// algorithm
 			(unsigned char*)byte_secret, 10,			// key
@@ -69,10 +69,13 @@ int main(int argc, char** argv) {
 	const int INTERVAL	= 30;
 	const int DIGITS	= 6;
 	
+	
 	// Base32 secret to utilize
 	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP";
 	
-	class TOTP tdata{
+	
+	// Create OTPData struct, which decides the environment
+	class TOTP tdata {
 		BASE32_SECRET,
 		SHA1_BITS,
 		hmac_algo_sha1,
@@ -81,14 +84,16 @@ int main(int argc, char** argv) {
 		INTERVAL
 	};
 		
-	class HOTP hdata{
+	class HOTP hdata {
 		BASE32_SECRET,
 		SHA1_BITS,
 		hmac_algo_sha1,
 		SHA1_DIGEST,
-		DIGITS
+		DIGITS,
+		0
 	};
 	
+	// Dump data members of struct OTPData tdata
 	OTPData* tdata_s = tdata.getDataStruct();
 	cout << "\\\\ totp tdata \\\\"		<< endl;
 	cout << "tdata->digits: `"			<< tdata_s->digits			<< "`" << endl;
@@ -100,6 +105,7 @@ int main(int argc, char** argv) {
 	cout << "tdata->base32_secret: `"	<< tdata_s->base32_secret	<< "`" << endl;
 	cout << "// totp tdata //"			<< endl						<< endl;
 	
+	// Dump data members of struct OTPData hdata
 	OTPData* hdata_s = hdata.getDataStruct();
 	cout << "\\\\ hotp hdata \\\\"		<< endl;
 	cout << "hdata->digits: `"			<< hdata_s->digits			<< "`" << endl;
@@ -109,6 +115,7 @@ int main(int argc, char** argv) {
 	cout << "hdata->algo: `"			<< reinterpret_cast<void*>(hdata_s->algo) << "`" << endl;
 	cout << "hdata->digest: `"			<< hdata_s->digest			<< "`" << endl;
 	cout << "hdata->base32_secret: `"	<< hdata_s->base32_secret	<< "`" << endl;
+	cout << "hdata->count: `"			<< hdata_s->count			<< "`" << endl;
 	cout << "// hotp hdata //"			<< endl						<< endl;
 	
 	cout << "Current Time: `" << time(NULL) << "`" << endl;
@@ -124,12 +131,14 @@ int main(int argc, char** argv) {
 	char whatever1[] = "account@whatever1.com";
 	char whatever2[] = "account@whatever2.com";
 	
-	char* uri = OTPURI::build_uri(tdata.getDataStruct(), name1, whatever1, 0);
+	// Show example of URIs
+	char* uri = OTPURI::build_uri(tdata.getDataStruct(), name1, whatever1);
 	cout << "TOTP URI: `" << uri << "`" << endl << endl;
 	free(uri);
 	
-	size_t counter = 52;
-	uri = OTPURI::build_uri(hdata.getDataStruct(), name2, whatever2, counter);
+	size_t counter = 52; // for example
+	hdata_s->count = counter;
+	uri = OTPURI::build_uri(hdata.getDataStruct(), name2, whatever2);
 	cout << "HOTP URI: `" << uri << "`" << endl << endl;
 	free(uri);
 	
@@ -163,35 +172,35 @@ int main(int argc, char** argv) {
 	//   3. Check for error
 	//   4. Free data
 	
-	// TOTP now
+	// totp_now
 	char* tcode = (char*) calloc(DIGITS+1, sizeof(char));
 	int totp_err_1 = tdata.now(tcode);
 	if(totp_err_1 == 0) {
 		cout << "TOTP Error 1" << endl;
 		return 1;
 	}
-	cout << "TOTP Generated: `" << tcode << "` `" << totp_err_1 << "`" << endl;
+	cout << "totp_now(): `" << tcode << "` `" << totp_err_1 << "`" << endl;
 	free(tcode);
 	
 	
 	// TOTP at
 	char* tcode2 = (char*) calloc(DIGITS+1, sizeof(char));
-	int totp_err_2 = tdata.at(1, 0, tcode2);
+	int totp_err_2 = tdata.at(0, 0, tcode2);
 	if(totp_err_2 == 0) {
 		cout << "TOTP Error 2" << endl;
 		return 1;
 	}
-	cout << "TOTP Generated: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
+	cout << "totp_at(0, 0): `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
 	free(tcode2);
 	
 	
 	// Do a verification for a hardcoded code
 	
 	// Won't succeed, this code is for a timeblock far into the past
-	int tv1 = tdata.verify(576203, time(NULL), 4);
+	int tv1 = tdata.verify("358892", time(NULL), 4);
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
-	int tv2 = tdata.verify(282760, 0, 4);
+	int tv2 = tdata.verify("282760", 0, 4);
 	cout << "TOTP Verification 1: `" << (tv1 == 0 ? "false" : "true") << "`" << endl;
 	cout << "TOTP Verification 2: `" << (tv2 == 0 ? "false" : "true") << "`" << endl;
 	
@@ -218,7 +227,7 @@ int main(int argc, char** argv) {
 	
 	// Do a verification for a hardcoded code
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
-	int hv = hdata.verify(996554, 1);
+	int hv = hdata.compare("996554", 1);
 	cout << "HOTP Verification 1: `" << (hv == 0 ? "false" : "true") << "`" << endl;
 	
 	

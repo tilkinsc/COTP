@@ -123,12 +123,13 @@ int main(int argc, char** argv) {
 	char whatever2[] = "account@whatever2.com";
 	
 	// Show example of URIs
-	char* uri = otpuri_build_uri(tdata, name1, whatever1, 0);
+	char* uri = otpuri_build_uri(tdata, name1, whatever1);
 	printf("TOTP URI 1: `%s`\n\n", uri);
 	free(uri);
 	
 	size_t counter = 52; // for example
-	uri = otpuri_build_uri(hdata, name2, whatever2, counter);
+	hdata->count = counter;
+	uri = otpuri_build_uri(hdata, name2, whatever2);
 	printf("HOTP URI 2: `%s`\n\n", uri);
 	free(uri);
 	
@@ -162,9 +163,6 @@ int main(int argc, char** argv) {
 	//   3. Check for error
 	//   4. Free data
 	
-	// Print out time
-	printf("Current time: %llu\n", 1654743612736);
-	
 	// totp_now
 	char* tcode = calloc(DIGITS+1, sizeof(char));
 	int totp_err_1 = totp_now(tdata, tcode);
@@ -185,13 +183,14 @@ int main(int argc, char** argv) {
 	printf("totp_at(0, 0): `%s` `%d`\n", tcode2, totp_err_2);
 	free(tcode2);
 	
+	
 	// Do a verification for a hardcoded code
 	
 	// Won't succeed, this code is for a timeblock far into the past
-	int tv1 = totp_verify(tdata, "358892", 1654743612736, 4);
+	int tv1 = totp_verify(tdata, "358892", time(NULL), 4);
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
-	int tv2 = totp_verify(tdata, "282760", 0, 0);
+	int tv2 = totp_verify(tdata, "282760", 0, 4);
 	printf("TOTP Verification 1: `%s`\n", tv1 == 0 ? "false" : "true");
 	printf("TOTP Verification 2: `%s`\n", tv2 == 0 ? "false" : "true");
 	

@@ -8,13 +8,13 @@
 
 
 /*
-	Encodes given data into url-safe data. Do use a url,
+	Encodes given data into url-safe data. Do not use a url,
 	as it will also transpose the characters that are safe/expected.
 	Null-terminates returned string.
 	
 	Returns
 			Pointer to malloc'd url-safe data string
-		Out of memory, 0
+		error, 0
 */
 char* otpuri_encode_url(const char* data, size_t data_len) {
 	static const char to_test[] = "\"<>#%@{}|\\^~[]` ?&";
@@ -52,11 +52,10 @@ char* otpuri_encode_url(const char* data, size_t data_len) {
 	
 	Returns
 			url-safe URI data string
-		issuer or name == 0, 0
-		Out of memory, 0
+		error, 0
 		
 */
-char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) {
+char* otpuri_build_uri(OTPData* data, char* issuer, char* name) {
 	if(issuer == 0 || name == 0)
 		return 0;
 	char* cissuer = otpuri_encode_url(issuer, strlen(issuer));
@@ -77,21 +76,21 @@ char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) 
 	
 	snprintf(digits, 2, "%Iu", data->digits);
 	
-	size_t arg_len = strlen("?secret=") + strlen("&issuer=") + strlen("&algorithm=") + strlen("&digits=")
+	size_t arg_len = 9 + 9 + 12 + 9
 					+ strlen(secret) + strlen(cissuer) + strlen(data->digest) + strlen(digits);
 	
 	const char* otp_type = 0;
 	switch(data->method) {
 		case TOTP:
 			otp_type = TOTP_CHARS;
-			time = calloc(strlen("&period=") + 11 + 1, sizeof(char));
-			snprintf(time, strlen("&period=") + 11 + 1, "%s%Iu", "&period=", data->interval);
+			time = calloc(9 + 11 + 1, sizeof(char));
+			snprintf(time, 9 + 11 + 1, "%s%Iu", "&period=", data->interval);
 			arg_len += strlen(time);
 			break;
 		case HOTP:
 			otp_type = HOTP_CHARS;
-			time = calloc(strlen("&counter=") + 11 + 1, sizeof(char));
-			snprintf(time, strlen("&counter=") + 11 + 1, "%s%llu", "&counter=", counter);
+			time = calloc(10 + 11 + 1, sizeof(char));
+			snprintf(time, 10 + 11 + 1, "%s%llu", "&counter=", data->count);
 			arg_len += strlen(time);
 			break;
 		default:
@@ -99,11 +98,6 @@ char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) 
 			break;
 	}
 	
-	// I have no clue what this means, it seems redundant
-	// if(otp_type != OTP_CHARS && time == 0)
-		// goto exit;
-	
-	// base_fmt + OTP/TOTP/HOTP + cissuer + cname + args
 	size_t uri_len = 13 + 4 + strlen(cissuer) + strlen(cname) + arg_len;
 	
 	args = calloc(arg_len + 1, sizeof(char));
