@@ -91,7 +91,7 @@ char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) 
 		case HOTP:
 			otp_type = HOTP_CHARS;
 			time = calloc(strlen("&counter=") + 11 + 1, sizeof(char));
-			snprintf(time, strlen("&counter=") + 11 + 1, "%s%Iu", "&counter=", counter);
+			snprintf(time, strlen("&counter=") + 11 + 1, "%s%llu", "&counter=", counter);
 			arg_len += strlen(time);
 			break;
 		default:
@@ -111,13 +111,13 @@ char* otpuri_build_uri(OTPData* data, char* issuer, char* name, size_t counter) 
 	if(args == 0 || uri == 0)
 		goto exit;
 	
-	strncat(args, "?secret=", strlen("?secret="));
+	strncat(args, "?secret=", 9);
 	strncat(args, secret, strlen(secret));
-	strncat(args, "&issuer=", strlen("&issuer="));
+	strncat(args, "&issuer=", 9);
 	strncat(args, cissuer, strlen(cissuer));
-	strncat(args, "&algorithm=", strlen("&algorithm="));
+	strncat(args, "&algorithm=", 12);
 	strncat(args, digest, strlen(digest));
-	strncat(args, "&digits=", strlen("&digits="));
+	strncat(args, "&digits=", 9);
 	strncat(args, digits, strlen(digits));
 	if(time != 0)
 		strncat(args, time, strlen(time));

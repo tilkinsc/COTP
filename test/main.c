@@ -83,14 +83,15 @@ int main(int argc, char** argv) {
 				SHA1_BITS,
 				hmac_algo_sha1,
 				SHA1_DIGEST,
-				DIGITS);
+				DIGITS,
+				0);
 	
 	
 	// Dump data members of struct OTPData tdata
 	printf("\\\\ totp tdata \\\\\n");
-	printf("tdata->digits: `%Iu`\n", tdata->digits);
-	printf("tdata->interval: `%Iu`\n", tdata->interval);
-	printf("tdata->bits: `%Iu`\n", tdata->bits);
+	printf("tdata->digits: `%u`\n", tdata->digits);
+	printf("tdata->interval: `%u`\n", tdata->interval);
+	printf("tdata->bits: `%u`\n", tdata->bits);
 	printf("tdata->method: `%u`\n", tdata->method);
 	printf("tdata->algo: `0x%p`\n", tdata->algo);
 	printf("tdata->digest: `%s`\n", tdata->digest);
@@ -99,15 +100,16 @@ int main(int argc, char** argv) {
 	
 	// Dump data members of struct OTPData hdata
 	printf("\\\\ hotp hdata \\\\\n");
-	printf("hdata->digits: `%Iu`\n", hdata->digits);
-	printf("hdata->bits: `%Iu`\n", hdata->bits);
+	printf("hdata->digits: `%u`\n", hdata->digits);
+	printf("hdata->bits: `%u`\n", hdata->bits);
 	printf("hdata->method: `%u`\n", hdata->method);
 	printf("hdata->algo: `0x%p`\n", hdata->algo);
 	printf("hdata->digest: `%s`\n", hdata->digest);
 	printf("hdata->base32_secret: `%s`\n", hdata->base32_secret);
+	printf("hdata->count: `%llu`\n", hdata->count);
 	printf("// hotp hdata //\n\n");
 	
-	printf("Current Time: `%Iu`'\n", time(NULL));
+	printf("Current Time: `%llu`'\n", time(NULL));
 	
 	
 	
@@ -160,6 +162,9 @@ int main(int argc, char** argv) {
 	//   3. Check for error
 	//   4. Free data
 	
+	// Print out time
+	printf("Current time: %llu\n", 1654743612736);
+	
 	// totp_now
 	char* tcode = calloc(DIGITS+1, sizeof(char));
 	int totp_err_1 = totp_now(tdata, tcode);
@@ -167,33 +172,30 @@ int main(int argc, char** argv) {
 		puts("TOTP Error 1");
 		return 1;
 	}
-	printf("TOTP Generated: `%s` `%d`\n", tcode, totp_err_1);
+	printf("totp_now(): `%s` `%d`\n", tcode, totp_err_1);
 	free(tcode);
-	
 	
 	// totp_at
 	char* tcode2 = calloc(DIGITS+1, sizeof(char));
-	int totp_err_2 = totp_at(tdata, 1, 0, tcode2);
+	int totp_err_2 = totp_at(tdata, 0, 0, tcode2);
 	if(totp_err_2 == 0) {
 		puts("TOTP Error 2");
 		return 1;
 	}
-	printf("TOTP Generated: `%s` `%d`\n", tcode2, totp_err_2);
+	printf("totp_at(0, 0): `%s` `%d`\n", tcode2, totp_err_2);
 	free(tcode2);
-	
 	
 	// Do a verification for a hardcoded code
 	
 	// Won't succeed, this code is for a timeblock far into the past
-	int tv1 = totp_verifyi(tdata, 576203, time(NULL), 4);
+	int tv1 = totp_verify(tdata, "358892", 1654743612736, 4);
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
-	int tv2 = totp_verifyi(tdata, 282760, 0, 4);
+	int tv2 = totp_verify(tdata, "282760", 0, 0);
 	printf("TOTP Verification 1: `%s`\n", tv1 == 0 ? "false" : "true");
 	printf("TOTP Verification 2: `%s`\n", tv2 == 0 ? "false" : "true");
 	
 	puts(""); // line break for readability
-	
 	
 	////////////////////////////////////////////////////////////////
 	// HOTP Stuff                                                 //
@@ -215,7 +217,7 @@ int main(int argc, char** argv) {
 	
 	// Do a verification for a hardcoded code
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
-	int hv = hotp_verifyi(hdata, 996554, 1);
+	int hv = hotp_compare(hdata, "996554", 1);
 	printf("HOTP Verification 1: `%s`\n", hv == 0 ? "false" : "true");
 	
 	

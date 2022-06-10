@@ -1,42 +1,62 @@
-
 #include "cotp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
 
 /*
 	Allocates a new OTPData struct. Initializes its values.
-
+	
+	base32_secret is a base32 compliant secret string
+	bits is the bit length of the out of the chosen hmac cryptographic algorithm
+	algo is the hmac algorithm implementation for hash and hmac
+	digest is the string name of the hmac algorithm
+	digits is the amount of output numbers for the OTP
+	
+	Do not forget to call otp_free(...)
+	
 	Returns
-			A pointer to the new struct
+			A pointer to a new struct OTPData struct
 		error, 0
 */
-OTPData* otp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits) {
+OTPData* otp_new(const char* base32_secret, uint32_t bits, COTP_ALGO algo, const char* digest, uint32_t digits) {
 	OTPData* data = malloc(sizeof(OTPData));
 	if(data == 0)
 		return 0;
 	data->digits = digits ? digits : 6;
-	
-	data->base32_secret = &base32_secret[0];
-	data->digest = &digest[0];
-	data->algo = algo;
+	data->interval = 0;
 	data->bits = bits;
+	data->count = 0;
 	
 	data->method = OTP;
+	data->algo = algo;
+	
+	data->digest = &digest[0];
+	data->base32_secret = &base32_secret[0];
+	
 	return data;
 }
 
 /*
-	Allocates a new OTPData struct. Extends off of otp_new. Initializes its values furhter.
+	Allocates a new OTPData struct. Initializes its values. Extends off of otp_new.
+	
+	base32_secret is a base32 compliant secret string
+	bits is the bit length of the out of the chosen hmac cryptographic algorithm
+	algo is the hmac algorithm implementation for hash and hmac
+	digest is the string name of the hmac algorithm
+	digits is the amount of output numbers for the OTP
+	interval is the amount of time a code is valid for in seconds
+	
+	Do not forget to call otp_free(...)
 	
 	Returns
-			A pointer to the new struct
+			A pointer to a new struct OTPData struct
 		error, 0
 */
-OTPData* totp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits, size_t interval) {
+OTPData* totp_new(const char* base32_secret, uint32_t bits, COTP_ALGO algo, const char* digest, uint32_t digits, uint32_t interval) {
 	OTPData* data = otp_new(base32_secret, bits, algo, digest, digits);
 	data->interval = interval;
 	data->method = TOTP;
@@ -44,37 +64,47 @@ OTPData* totp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const 
 }
 
 /*
-	Allocates a new OTPData struct. Extends off of otp_new. Initializes its values furhter.
+	Allocates a new OTPData struct. Initializes its values. Extends off of otp_new.
+	
+	base32_secret is a base32 compliant secret string
+	bits is the bit length of the out of the chosen hmac cryptographic algorithm
+	algo is the hmac algorithm implementation for hash and hmac
+	digest is the string name of the hmac algorithm
+	digits is the amount of output numbers for the OTP
+	count is the current counter
+	
+	Do not forget to call otp_free(...)
 	
 	Returns
-			A pointer to the new struct
+			A pointer to a new struct OTPData struct
 		error, 0
 */
-OTPData* hotp_new(const char* base32_secret, size_t bits, COTP_ALGO algo, const char* digest, size_t digits) {
+OTPData* hotp_new(const char* base32_secret, uint32_t bits, COTP_ALGO algo, const char* digest, uint32_t digits, uint64_t count) {
 	OTPData* data = otp_new(base32_secret, bits, algo, digest, digits);
 	data->method = HOTP;
+	data->count = count;
 	return data;
 }
 
 
 /*
-	Frees data allocated by *otp_new() calls.
+	Frees data allocated by *otp_new(...) calls.
 */
 void otp_free(OTPData* data) {
 	free(data);
 }
 
 /*
-	un-base32's a base32 string using data as instructions, size as validation,
-	and out_str as output.
+	Un-base32's a base32 string stored inside an OTPData.
+	
+	out_str is the null-terminated output string already allocated
 	
 	Returns
 			1 success
-		if out_str != 0, writes generated base10 as string to out_str
 		error, 0
 */
-int otp_byte_secret(OTPData* data, size_t size, char* out_str) {
-	if(out_str == NULL || size % 8 != 0)
+int otp_byte_secret(OTPData* data, char* out_str) {
+	if(out_str == NULL || strlen(data->base32_secret) % 8 != 0)
 		return 0;
 	int n = 5;
 	for (size_t i=0; ; i++) {
@@ -82,9 +112,9 @@ int otp_byte_secret(OTPData* data, size_t size, char* out_str) {
 		out_str[i*5] = 0;
 		for (int block=0; block<8; block++) {
 			int offset = (3 - (5*block) % 8);
-			int octet = (block*5) / 8;
+			int octet = (block*5)/8;
 			
-			unsigned int c = data->base32_secret[i*8+block];
+			unsigned int c = data->base32_secret[i*8 + block];
 			if (c >= 'A' && c <= 'Z')
 				n = c - 'A';
 			if (c >= '2' && c <= '7')
@@ -93,9 +123,9 @@ int otp_byte_secret(OTPData* data, size_t size, char* out_str) {
 				n = octet;
 				break;
 			}
-			out_str[i*5+octet] |= -offset > 0 ? n >> -offset : n << offset;
+			out_str[i*5 + octet] |= -offset > 0 ? n >> -offset : n << offset;
 			if (offset < 0)
-				out_str[i*5+octet+1] = -(8 + offset) > 0 ? n >> -(8 + offset) : n << (8 + offset);
+				out_str[i*5 + octet + 1] = -(8 + offset) > 0 ? n >> -(8 + offset) : n << (8 + offset);
 		}
 		if(n < 5)
 			break;
@@ -104,31 +134,37 @@ int otp_byte_secret(OTPData* data, size_t size, char* out_str) {
 }
 
 /*
-	Converts an integer into 8 byte array, where the first 4 bytes are \0's.
+	Converts an integer into an 8 byte array.
+	
+	out_str is the null-terminated output string already allocated
 	
 	Returns
 			1 success
-			if out_str != 0, writes generated byte array as string to out_str
 		error, 0
 */
-int otp_int_to_bytestring(int integer, char* out_str) {
+int otp_num_to_bytestring(uint64_t integer, char* out_str) {
 	if(out_str == NULL)
 		return 0;
-	out_str[4] = integer >> 24; // I don't like this method of breaking down the integer
-	out_str[4+1] = integer >> 16;
-	out_str[4+2] = integer >> 8;
-	out_str[4+3] = integer;
+	
+	size_t i = 7;
+	while  (integer != 0) {
+		out_str[i--] = integer & 0xFF;
+		integer >>= 8;
+	}
 	return 1;
 }
 
 /*
-	Generates a valid base32 number given len as size, chars as a charset,
-	and out_str as output. out_str's size should be precomputed and
-	null-terminated.
+	Generates a valid base32 number.
+	
+	if len == 0, len = 16
+	
+	len is the (strlen of out_str) - 1
+	chars is the base32 charset
+	out_str is the null-terminated output string already allocated
 	
 	Returns
 			1 on success
-			if out_str != 0, writes generated base32 as string to out_str
 		error, 0
 
 */
@@ -143,22 +179,27 @@ int otp_random_base32(size_t len, const char* chars, char* out_str) {
 
 
 /*
-	Compares using data as instructions, key as comparison data,
-	increment as offset of timeblock generated from for_time, and for_time as
-	time in seconds. Converts key to string. Converts
-	count to string to do a string comparison between key as string.
+	Compares a key against a generated key for a single specific timeblock.
+	
+	key is an null-terminated input string, a previous OTP generation, must be data->digits+1 long
+	offset is a timeblock adjustment for the generated compare key
+	for_time is the time the generated key will be created for
 	
 	Returns
-			1 success, 0 no full comparison made
+			1 success
+			0 no full comparison made
 		error, 0
 */
-int totp_compares(OTPData* data, const char* key, long increment, unsigned int for_time) {
-	char* time_str = calloc(8, sizeof(char));
-	if(totp_at(data, for_time, increment, time_str) == 0) {
+int totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_time) {
+	char* time_str = calloc(data->digits+1, sizeof(char));
+	if (time_str == 0) {
+		return 0;
+	}
+	if(totp_at(data, for_time, offset, time_str) == 0) {
 		free(time_str);
 		return 0;
 	}
-	for (size_t i=0; i<8; i++) {
+	for (size_t i=0; i<data->digits; i++) {
 		if(key[i] != time_str[i]) {
 			free(time_str);
 			return 0;
@@ -169,47 +210,27 @@ int totp_compares(OTPData* data, const char* key, long increment, unsigned int f
 }
 
 /*
-	Compares using data as instructions, key as comparison data,
-	increment as offset of timeblock generated from for_time, and for_time as
-	time in seconds. Converts key to string.
+	Generates a OTP key using the totp algorithm.
+	
+	for_time is the time the generated key will be created for
+	offset is a timeblock adjustment for the generated key
+	out_str is the null-terminated output string already allocated
 	
 	Returns
-			1 success, 0 no full comparison made
+			1 if otp key was successfully generated
 		error, 0
 */
-int totp_comparei(OTPData* data, int key, long increment, unsigned int for_time) {
-	char* key_str = calloc(8, sizeof(char));
-	sprintf(key_str, "%d", key);
-	int status = totp_compares(data, key_str, increment, for_time);
-	free(key_str);
-	return status;
+int totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_str) {
+	return otp_generate(data, totp_timecode(data, for_time) + offset, out_str);
 }
 
 /*
-	Generates a totp given data as instructions, for_time as time in seconds,
-	counter_offset as an offset to generated timeblock from for_time,
-	and out_str as output. out_str's size should be precomputed and
-	null-terminated. If out_str is null, nothing is wrote to it.
+	Generates a OTP key using the totp algorithm with the current, unsecure time in seconds.
+	
+	out_str is the null-terminated output string already allocated
 	
 	Returns
-			> 0 TOTP for the current input based off struct OTPDATA
-		if out_str != 0, writes generated TOTP as string to out_str
-		error, 0
-*/
-int totp_at(OTPData* data, unsigned int for_time, long counter_offset, char* out_str) {
-	return otp_generate(data, totp_timecode(data, for_time) + counter_offset, out_str);
-}
-
-/*
-	Generates a totp given data as instructions, and out_str as output.
-	out_str's size should be precomputed and null-terminated.
-	If out_str is null, nothing is wrote to it. Uses time(NULL) for
-	the current time to be generated into a timeblock based on
-	data->interval.
-	
-	Returns
-			> 0 TOTP for the current input based off struct OTPDATA
-		if out_str != 0, writes generated TOTP as string to out_str
+			1 if otp key was successfully generated
 		error, 0
 */
 int totp_now(OTPData* data, char* out_str) {
@@ -217,120 +238,88 @@ int totp_now(OTPData* data, char* out_str) {
 }
 
 /*
-	Compares using data as instructions, key as comparison data, for_time
-	as time in seconds, and valid_window as offset to for_time timeblock.
+	Compares a key against a generated key for multiple timeblocks before and after a specific time.
+	
+	key is an null-terminated input string, a previous OTP generation, must be data->digits+1 long
+	for_time is the time the generated key will be created for
+	valid_window is the number of timeblocks a OTP should be valid for
 	
 	Returns
-			1 success, 0 no full comparison made
-		if valid_window < 0, 0
+			1 success
 		error, 0
 */
-int totp_verifyi(OTPData* data, int key, unsigned int for_time, long valid_window) {
-	if(valid_window < 0)
+int totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window) {
+	if(valid_window < 0) {
 		return 0;
+	}
 	if(valid_window > 0) {
-		for (int i=-valid_window; i<valid_window; i++) {
-			const int cmp = totp_comparei(data, key, i, for_time);
-			if(cmp == 1)
+		for (int64_t i=-valid_window; i<valid_window+1; i++) {
+			printf("Beep");
+			int cmp = totp_compare(data, key, i, for_time);
+			if(cmp == 1) {
+				printf("\n");
 				return cmp;
+			}
 		}
 		return 0;
 	}
-	return totp_comparei(data, key, 0, for_time);
+	return totp_compare(data, key, 0, for_time);
 }
 
 /*
-	Compares using data as instructions, key as comparison data, for_time
-	as time in seconds, and valid_window as offset to for_time timeblock.
+	Calculate the time in seconds relative to for_time an OTP is valid for.
+	
+	for_time is a time in seconds
+	valid_window is the number of timeblocks a OTP should be valid for
 	
 	Returns
-			1 success, 0 no full comparison made
-		if valid_window < 0, 0
-		error, 0
+			the expiration time for a code using the current OTPData configuration
 */
-int totp_verifys(OTPData* data, const char* key, unsigned int for_time, long valid_window) {
-	if(valid_window < 0)
-		return 0;
-	if(valid_window > 0) {
-		for (int i=-valid_window; i<valid_window; i++) {
-			const int cmp = totp_compares(data, key, i, for_time);
-			if(cmp == 1)
-				return cmp;
-		}
-		return 0;
-	}
-	return totp_compares(data, key, 0, for_time);
-}
-
-/*
-	Calculates using data as instructions, for time as time in seconds,
-	and valid_window as offset to for_time timeblock a time where a key
-	is alive for based off a certain time point in seconds.
-	
-	Returns
-			time in seconds relative to for_time, using data->interval
-*/
-unsigned int totp_valid_until(OTPData* data, unsigned int for_time, size_t valid_window) {
+uint64_t totp_valid_until(OTPData* data, uint64_t for_time, int64_t valid_window) {
 	return for_time + (data->interval * valid_window);
 }
 
 /*
-	Generates a timeblock using data as instructions, and a time in seconds.
+	Generates the timeblock for a time in seconds.
 	
 	Timeblocks are the amount of intervals in a given time. For example,
-	if 1m seconds has passed, the amount 1m/30 would give the amount of
-	30 seconds in 1m seconds. As an integer, there is no needless decimals.
+	if 1,000,000 seconds has passed for 30 second intervals, you would get
+	33,333 timeblocks (intervals), where timeblock++ is effectively +30 seconds.
+	
+	for_time is a time in seconds to get the current timeblocks
 	
 	Returns
 			timeblock given for_time, using data->interval
 		error, 0
 */
-int totp_timecode(OTPData* data, unsigned int for_time) {
+uint64_t totp_timecode(OTPData* data, uint64_t for_time) {
 	if(data->interval <= 0)
 		return 0;
 	return for_time/data->interval;
 }
 
 
-
 /*
-	Compares using data as instructions, key as comparison data,
-	and counter as comparison data. Converts key to string. Converts
-	count to string to do a string comparison between key as string.
+	Compares a key against a generated key for a single counter.
+	
+	key is an null-terminated input string, a previous OTP generation, must be data->digits+1 long
+	offset is a timeblock adjustment for the generated compare key
+	for_time is the time the generated key will be created for
 	
 	Returns
-			1 success, 0 no full comparison made
+			1 success
+			0 no full comparison made
 		error, 0
 */
-int hotp_comparei(OTPData* data, int key, size_t counter) {
-	char* key_str = calloc(8, sizeof(char));
-	if(key_str == 0)
-		return 0;
-	sprintf(key_str, "%d", key);
-	int status = hotp_compares(data, key_str, counter);
-	free(key_str);
-	return status;
-}
-
-/*
-	Compares using data as instructions, key as comparison data,
-	and counter as comparison data. Converts count to string
-	to do a string comparison between key.
-	
-	Returns
-			1 success, 0 no full comparison made
-		error, 0
-*/
-int hotp_compares(OTPData* data, const char* key, size_t counter) {
-	char* cnt_str = calloc(8, sizeof(char));
-	sprintf(cnt_str, "%Iu", counter);
+int hotp_compare(OTPData* data, const char* key, uint64_t counter) {
+	char* cnt_str = calloc(data->digits+1, sizeof(char));
 	if(cnt_str == 0)
 		return 0;
 	if(hotp_at(data, counter, cnt_str) == 0) {
 		free(cnt_str);
 		return 0;
 	}
-	for (size_t i=0; i<8; i++) {
+	for (size_t i=0; i<data->digits; i++) {
 		if(key[i] != cnt_str[i]) {
 			free(cnt_str);
 			return 0;
@@ -341,44 +330,31 @@ int hotp_compares(OTPData* data, const char* key, size_t counter) {
 }
 
 /*
-	Generates a hotp given data as instructions, count as data,
-	and out_str as output. out_str's size should be precomputed and
-	null-terminated. If out_str is null, nothing is wrote to it.
+	Generates a OTP key using the hotp algorithm.
+	
+	counter is the counter the generated key will be created for
+	out_str is the null-terminated output string already allocated
 	
 	Returns
-			> 0 HOTP for the current input based off struct OTPDATA
-		if out_str != 0, writes generated HOTP as string to out_str
+			1 if otp key was successfully generated
 		error, 0
 */
-int hotp_at(OTPData* data, size_t counter, char* out_str) {
+int hotp_at(OTPData* data, uint64_t counter, char* out_str) {
 	return otp_generate(data, counter, out_str);
 }
 
-
 /*
-	Needless function, for library fluency. Compares using data as instructions,
-	key as comparison data, and counter as comparison data.
+	Generates a OTP key using the hotp algorithm and advances the counter.
+	
+	out_str is the null-terminated output string already allocated
 	
 	Returns
-			1 if hotp_comparei is successful
-			0 if hotp_comparei is unsuccessful
+			1 if otp key was successfully generated
 		error, 0
 */
-int hotp_verifyi(OTPData* data, int key, size_t counter) {
-	return hotp_comparei(data, key, counter);
-}
-
-/*
-	Needless function, for library fluency. Compares using data as instructions,
-	key as comparison data, and counter as comparison data.
-	
-	Returns
-			1 if hotp_compares is successful
-			0 if hotp_compares is unsuccessful
-		error, 0
-*/
-int hotp_verifys(OTPData* data, const char* key, size_t counter) {
-	return hotp_compares(data, key, counter);
+int hotp_next(OTPData* data, char* out_str)
+{
+	return otp_generate(data, data->count++, out_str);
 }
 
 /*
@@ -402,18 +378,15 @@ int hotp_verifys(OTPData* data, const char* key, size_t counter) {
 	//   key generation is valid for the given input or just a temp collision.
 	//   Should make new functions for this though.
 */
-int otp_generate(OTPData* data, int input, char* out_str) {
-	if(input < 0) return 0;
-	
-	int code = 0;
+int otp_generate(OTPData* data, int64_t input, char* out_str) {
+	uint64_t code = 0;
 	
 	char* byte_string = 0;
 	char* byte_secret = 0;
 	char* hmac = 0;
 	
 	// de-BASE32 sizes
-	size_t secret_len = strlen(data->base32_secret);
-	size_t desired_secret_len = (secret_len / 8) * 5;
+	uint64_t desired_secret_len = (strlen(data->base32_secret) / 8) * 5;
 	
 	// de-SHA size
 	int bit_size = data->bits / 8;
@@ -425,33 +398,32 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 	byte_string = calloc(8+1, sizeof(char));
 	byte_secret = calloc(desired_secret_len+1, sizeof(char));
 	hmac = calloc(bit_size+1, sizeof(char));
-	if(byte_secret == 0
-			|| byte_string == 0
+	if(byte_string == 0
+			|| byte_secret == 0
 			|| hmac == 0
-			|| otp_int_to_bytestring(input, byte_string) == 0
-			|| otp_byte_secret(data, secret_len, byte_secret) == 0
+			|| otp_num_to_bytestring(input, byte_string) == 0
+			|| otp_byte_secret(data, byte_secret) == 0
 			|| (*(data->algo))(byte_secret, byte_string, hmac) == 0)
 		goto exit;
 	
-	
 	// gather hmac's offset, piece together code
-	int offset = (hmac[bit_size-1] & 0xF);
+	uint64_t offset = (hmac[bit_size-1] & 0xF);
 	code =
 		((hmac[offset] & 0x7F) << 24 |
 		(hmac[offset+1] & 0xFF) << 16 |
 		(hmac[offset+2] & 0xFF) << 8 |
 		(hmac[offset+3] & 0xFF));
-	code %= (int)pow(10, data->digits);
+	code %= (uint64_t) pow(10, data->digits);
 	
 	// write out the char array code, if requested
 	if(out_str != NULL)
-		sprintf(out_str, (char[]){'%', '0', data->digits + 48, 'd', '\0'}, code);
+		sprintf(out_str, "%0*llu", data->digits, code);
 	
 exit:
 	free(hmac);
 	free(byte_string);
 	free(byte_secret);
-	return code;
+	return 1;
 }
 
 
