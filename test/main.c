@@ -11,52 +11,67 @@
 #include <openssl/hmac.h>
 
 
+static const int32_t SHA1_BYTES   = 160 / 8;	// 20
+static const int32_t SHA256_BYTES = 256 / 8;	// 32
+static const int32_t SHA512_BYTES = 512 / 8;	// 64
+
 
 // byte_secret is unbase32 key
 // byte_string is data to be HMAC'd
-int hmac_algo_sha1(const char byte_secret[], const char byte_string[], char out[]) {
-	
+int hmac_algo_sha1(const char* byte_secret, const char* byte_string, char* out)
+{
 	// Output len
 	unsigned int len = SHA1_BYTES;
 	
+	unsigned char* result = HMAC(
+			EVP_sha1(),							// algorithm
+			(unsigned char*)byte_secret, 10,	// key
+			(unsigned char*)byte_string, 8,		// data
+			(unsigned char*)out, &len);			// output
+	
 	// Return the HMAC success
-	return HMAC(
-			EVP_sha1(),									// algorithm
-			(unsigned char*)byte_secret, 10,			// key
-			(unsigned char*)byte_string, 8,				// data
-			(unsigned char*)out, &len) == 0 ? 0 : 1;	// output
+	return result == 0 ? 0 : len;
 }
 
-int hmac_algo_sha256(const char byte_secret[], const char byte_string[], char out[]) {
-	
+int hmac_algo_sha256(const char* byte_secret, const char* byte_string, char* out)
+{
 	// Output len
 	unsigned int len = SHA256_BYTES;
 	
+	unsigned char* result = HMAC(
+			EVP_sha256(),						// algorithm
+			(unsigned char*)byte_secret, 10,	// key
+			(unsigned char*)byte_string, 8,		// data
+			(unsigned char*)out, &len);			// output
+	
 	// Return the HMAC success
-	return HMAC(
-			EVP_sha256(),								// algorithm
-			(unsigned char*)byte_secret, 10,			// key
-			(unsigned char*)byte_string, 8,				// data
-			(unsigned char*)out, &len) == 0 ? 0 : 1;	// output
+	return result == 0 ? 0 : len;
 }
 
-int hmac_algo_sha512(const char byte_secret[], const char byte_string[], char out[]) {
-	
+int hmac_algo_sha512(const char* byte_secret, const char* byte_string, char* out)
+{
 	// Output len
 	unsigned int len = SHA512_BYTES;
 	
+	unsigned char* result = HMAC(
+			EVP_sha512(),						// algorithm
+			(unsigned char*)byte_secret, 10,	// key
+			(unsigned char*)byte_string, 8,		// data
+			(unsigned char*)out, &len);			// output
+	
 	// Return the HMAC success
-	return HMAC(
-			EVP_sha512(),								// algorithm
-			(unsigned char*)byte_secret, 10,			// key
-			(unsigned char*)byte_string, 8,				// data
-			(unsigned char*)out, &len) == 0 ? 0 : 1;	// output
+	return result == 0 ? 0 : len;
+}
+
+uint64_t get_current_time()
+{
+	return (uint64_t) time(NULL);
 }
 
 
 
-int main(int argc, char** argv) {
-	
+int main(int argc, char** argv)
+{
 	////////////////////////////////////////////////////////////////
 	// Initialization Stuff                                       //
 	////////////////////////////////////////////////////////////////
@@ -72,17 +87,14 @@ int main(int argc, char** argv) {
 	// Create OTPData struct, which decides the environment
 	OTPData* tdata = totp_new(
 				BASE32_SECRET,
-				SHA1_BITS,
 				hmac_algo_sha1,
-				SHA1_DIGEST,
+				get_current_time,
 				DIGITS,
 				INTERVAL);
 	
 	OTPData* hdata = hotp_new(
 				BASE32_SECRET,
-				SHA1_BITS,
 				hmac_algo_sha1,
-				SHA1_DIGEST,
 				DIGITS,
 				0);
 	
@@ -91,25 +103,22 @@ int main(int argc, char** argv) {
 	printf("\\\\ totp tdata \\\\\n");
 	printf("tdata->digits: `%u`\n", tdata->digits);
 	printf("tdata->interval: `%u`\n", tdata->interval);
-	printf("tdata->bits: `%u`\n", tdata->bits);
 	printf("tdata->method: `%u`\n", tdata->method);
 	printf("tdata->algo: `0x%p`\n", tdata->algo);
-	printf("tdata->digest: `%s`\n", tdata->digest);
+	printf("tdata->time: `0x%p`\n", tdata->time);
 	printf("tdata->base32_secret: `%s`\n", tdata->base32_secret);
 	printf("// totp tdata //\n\n");
 	
 	// Dump data members of struct OTPData hdata
 	printf("\\\\ hotp hdata \\\\\n");
 	printf("hdata->digits: `%u`\n", hdata->digits);
-	printf("hdata->bits: `%u`\n", hdata->bits);
 	printf("hdata->method: `%u`\n", hdata->method);
 	printf("hdata->algo: `0x%p`\n", hdata->algo);
-	printf("hdata->digest: `%s`\n", hdata->digest);
 	printf("hdata->base32_secret: `%s`\n", hdata->base32_secret);
 	printf("hdata->count: `%llu`\n", hdata->count);
 	printf("// hotp hdata //\n\n");
 	
-	printf("Current Time: `%llu`'\n", time(NULL));
+	printf("Current Time: `%llu`\n", get_current_time());
 	
 	
 	
@@ -123,14 +132,14 @@ int main(int argc, char** argv) {
 	char whatever2[] = "account@whatever2.com";
 	
 	// Show example of URIs
-	char* uri = otpuri_build_uri(tdata, name1, whatever1);
-	printf("TOTP URI 1: `%s`\n\n", uri);
+	char* uri = otpuri_build_uri(tdata, name1, whatever1, "SHA1");
+	printf("TOTP URI: `%s`\n\n", uri);
 	free(uri);
 	
 	size_t counter = 52; // for example
 	hdata->count = counter;
-	uri = otpuri_build_uri(hdata, name2, whatever2);
-	printf("HOTP URI 2: `%s`\n\n", uri);
+	uri = otpuri_build_uri(hdata, name2, whatever2, "SHA1");
+	printf("HOTP URI: `%s`\n\n", uri);
 	free(uri);
 	
 	
@@ -140,9 +149,9 @@ int main(int argc, char** argv) {
 	////////////////////////////////////////////////////////////////
 	
 	// Seed random generator
-	srand(time(NULL));
+	srand(get_current_time());
 	
-	const int base32_len = 16;
+	const int base32_len = 16; // must be % 8 == 0
 	
 	// Generate random base32
 	char* base32_new_secret = malloc(base32_len + 1 * sizeof(char));
@@ -153,48 +162,48 @@ int main(int argc, char** argv) {
 	puts(""); // line break for readability
 	
 	
+	
 	////////////////////////////////////////////////////////////////
 	// TOTP Stuff                                                 //
 	////////////////////////////////////////////////////////////////
 	
-	// Get TOTP for a time block
+	// Get TOTP for a timeblock
 	//   1. Reserve memory and ensure it's null-terminated
 	//   2. Generate and load totp key into buffer
 	//   3. Check for error
-	//   4. Free data
 	
 	// totp_now
-	char* tcode = calloc(DIGITS+1, sizeof(char));
+	char tcode[DIGITS+1];
+	memset(tcode, 0, DIGITS+1);
 	int totp_err_1 = totp_now(tdata, tcode);
-	if(totp_err_1 == 0) {
-		puts("TOTP Error 1");
+	if(totp_err_1 == OTP_ERROR) {
+		fputs("TOTP Error totp_now", stderr);
 		return 1;
 	}
 	printf("totp_now(): `%s` `%d`\n", tcode, totp_err_1);
-	free(tcode);
 	
 	// totp_at
-	char* tcode2 = calloc(DIGITS+1, sizeof(char));
+	char tcode2[DIGITS+1];
+	memset(tcode2, 0, DIGITS+1);
 	int totp_err_2 = totp_at(tdata, 0, 0, tcode2);
-	if(totp_err_2 == 0) {
-		puts("TOTP Error 2");
+	if(totp_err_2 == OTP_ERROR) {
+		fputs("TOTP Error totp_at", stderr);
 		return 1;
 	}
 	printf("totp_at(0, 0): `%s` `%d`\n", tcode2, totp_err_2);
-	free(tcode2);
-	
 	
 	// Do a verification for a hardcoded code
-	
-	// Won't succeed, this code is for a timeblock far into the past
-	int tv1 = totp_verify(tdata, "358892", time(NULL), 4);
+	// Won't succeed, this code is for a timeblock far into the past/future
+	int tv1 = totp_verify(tdata, "358892", get_current_time(), 4);
+	printf("TOTP Verification 1: `%s`\n", tv1 == 0 ? "false" : "true");
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
 	int tv2 = totp_verify(tdata, "282760", 0, 4);
-	printf("TOTP Verification 1: `%s`\n", tv1 == 0 ? "false" : "true");
 	printf("TOTP Verification 2: `%s`\n", tv2 == 0 ? "false" : "true");
 	
 	puts(""); // line break for readability
+	
+	
 	
 	////////////////////////////////////////////////////////////////
 	// HOTP Stuff                                                 //
@@ -202,22 +211,26 @@ int main(int argc, char** argv) {
 	
 	// Get HOTP for token 1
 	//   1. Reserve memory and ensure it's null-terminated
-	//   2. Generate and load hotp key into hcode
+	//   2. Generate and load hotp key into buffer
 	//   3. Check for error
-	//   3. Free data
-	char* hcode = calloc(8+1, sizeof(char));
+	
+	char hcode[DIGITS+1];
+	memset(hcode, 0, DIGITS+1);
 	int hotp_err_1 = hotp_at(hdata, 1, hcode);
-	if(hotp_err_1 == 0) {
-		puts("HOTP Error 1");
+	if(hotp_err_1 == OTP_ERROR) {
+		puts("HOTP Error hotp_at");
 		return 1;
 	}
-	printf("HOTP Generated at 1: `%s` `%d`\n", hcode, hotp_err_1);
-	free(hcode);
+	printf("hotp_at(1): `%s` `%d`\n", hcode, hotp_err_1);
 	
 	// Do a verification for a hardcoded code
+	// Won't succeed, 1 for JBSWY3DPEHPK3PXP == 996554
+	int hv1 = hotp_compare(hdata, "996555", 1);
+	printf("HOTP Verification 1: `%s`\n", hv1 == 0 ? "false" : "true");
+	
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
-	int hv = hotp_compare(hdata, "996554", 1);
-	printf("HOTP Verification 1: `%s`\n", hv == 0 ? "false" : "true");
+	int hv2 = hotp_compare(hdata, "996554", 1);
+	printf("HOTP Verification 2: `%s`\n", hv2 == 0 ? "false" : "true");
 	
 	
 	

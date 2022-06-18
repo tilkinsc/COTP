@@ -5,133 +5,185 @@
 
 extern "C" {
 	#include "cotp.h"
+	#include "otpuri.h"
 }
 
 #include <cstdint>
 
-// almost all functions have a form of error they can return
-// please check accordingly, and look at cotp.c for information
-// about the various errors. Rule of thumb: If return 0, you have
-// an error.
-class OTP {
-	
-	// data structure should be untouched. It is managed by functions.
-	// don't forget to clean it up using free() if it is global and unneeded,
-	// or let the deconstructor do its job out of scope
+// see cotp.c for descriptions
+class OTP
+{
 	protected:
 		OTPData* data;
 		
 	public:
-		OTP(const char* base32_secret, uint32_t bits, COTP_ALGO algo, const char* digest, uint32_t digits) {
-			data = otp_new(base32_secret, bits, algo, digest, digits);
+		OTP(const char* base32_secret, COTP_ALGO algo, uint32_t digits)
+		{
+			data = otp_new(base32_secret, algo, digits);
 		}
-		~OTP() {
+		~OTP()
+		{
 			otp_free(data);
 			data = nullptr;
 		}
 		
-		// returns data struct for serialization or something
-		// discouraged to use this class and separate the struct
-		OTPData* getDataStruct() {
-			return data;
-		}
-		
-		// generates an otp
-		// returns the integer, outputs the string version via output var
-		int generate(int64_t input, char* output) {
+		int generate(int64_t input, char* output)
+		{
 			return otp_generate(data, input, output);
 		}
 		
-		// converts the byte secret from base32 to the actual data
-		int byte_secret(char* out_str) {
+		int byte_secret(char* out_str)
+		{
 			return otp_byte_secret(data, out_str);
 		}
 		
-		// used internally, generates a byte string out of an 4-byte int
-		// ints need to be at least 4 bytes.
-		int num_to_bytestring(uint64_t integer, char* out_str) {
+		int num_to_bytestring(uint64_t integer, char* out_str)
+		{
 			return otp_num_to_bytestring(integer, out_str);
 		}
 		
-		// generates a random base32 code
-		static int random_base32(size_t len, const char* chars, char* out_str) {
+		// Caller must free the returned pointer.
+		char* build_uri(const char* issuer, const char* name, const char* digest)
+		{
+			return otpuri_build_uri(data, issuer, name, digest);
+		}
+		
+		// Pointer is automatically freed at end of object scope.
+		OTPData* data_struct()
+		{
+			return data;
+		}
+		
+		static int random_base32(size_t len, const char* chars, char* out_str)
+		{
 			return otp_random_base32(len, chars, out_str);
 		}
 		
-		// returns the default characters used to generate a base32 code
-		static const char* getDefaultChars() {
+		static const char* default_chars()
+		{
 			return otp_DEFAULT_BASE32_CHARS;
 		}
 		
-		// shouldn't have to use this function, unless you have a global OTP/TOTP/HOTP variable
-		void free() {
+};
+
+// see cotp.c for descriptions
+class TOTP
+{
+	protected:
+		OTPData* data;
+		
+	public:
+		TOTP(const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval)
+		{
+			data = totp_new(base32_secret, algo, time, digits, interval);
+		}
+		~TOTP()
+		{
 			otp_free(data);
 			data = nullptr;
 		}
 		
-};
-
-class TOTP : public OTP {
-	
-	public:
-		TOTP(const char* base32_secret, uint32_t bits, COTP_ALGO algo, const char* digest, uint32_t digits, uint32_t interval)
-				: OTP(base32_secret, bits, algo, digest, digits) {
-			data = totp_new(base32_secret, bits, algo, digest, digits, interval);
-		}
-		
-		// generates a code at a certain timecode
-		int at(uint64_t for_time, uint64_t offset, char* out_str) {
+		int at(uint64_t for_time, uint64_t offset, char* out_str)
+		{
 			return totp_at(data, for_time, offset, out_str);
 		}
 		
-		// generates a code at the current time
-		// before using, please srand(time(NULL)); (seed the C random generator)
-		int now(char* out_str) {
+		int now(char* out_str)
+		{
 			return totp_now(data, out_str);
 		}
 		
-		// hid the function totp_compare, no practical use. Is used internally
-		
-		// verifys an otp for the timecode given in a valid window
-		int verify(const char* key, uint64_t for_time, int64_t valid_window) {
+		int verify(const char* key, uint64_t for_time, int64_t valid_window)
+		{
 			return totp_verify(data, key, for_time, valid_window);
 		}
 		
-		// calculates time a key has to live from a point in time
-		uint64_t valid_until(uint64_t for_time, int64_t valid_window) {
+		uint64_t valid_until(uint64_t for_time, int64_t valid_window)
+		{
 			return totp_valid_until(data, for_time, valid_window);
 		}
 		
-		// generates a timecode for the given time
-		uint64_t timecode(uint64_t for_time) {
+		uint64_t timecode(uint64_t for_time)
+		{
 			return totp_timecode(data, for_time);
+		}
+		
+		// Caller must free the returned pointer.
+		char* build_uri(const char* issuer, const char* name, const char* digest)
+		{
+			return otpuri_build_uri(data, issuer, name, digest);
+		}
+		
+		// Pointer is automatically freed at end of object scope.
+		OTPData* data_struct()
+		{
+			return data;
+		}
+		
+		static int random_base32(size_t len, const char* chars, char* out_str)
+		{
+			return otp_random_base32(len, chars, out_str);
+		}
+		
+		static const char* default_chars()
+		{
+			return otp_DEFAULT_BASE32_CHARS;
 		}
 		
 };
 
-class HOTP : public OTP {
-	
-	public:
+// see cotp.c for descriptions
+class HOTP
+{
+	protected:
+		OTPData* data;
 		
-		HOTP(const char* base32_secret, uint32_t bits, COTP_ALGO algo, const char* digest, uint32_t digits, uint64_t count)
-				: OTP(base32_secret, bits, algo, digest, digits) {
-			data = hotp_new(base32_secret, bits, algo, digest, digits, count);
+	public:
+		HOTP(const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count)
+		{
+			data = hotp_new(base32_secret, algo, digits, count);
+		}
+		~HOTP()
+		{
+			otp_free(data);
+			data = nullptr;
 		}
 		
-		// hid the function hotp_compare, no practical use. Is used internally.
-		
-		// generates a otp at a certain number (number of hits)
-		int at(uint64_t counter, char* out_str) {
+		int at(uint64_t counter, char* out_str)
+		{
 			return hotp_at(data, counter, out_str);
 		}
 		
-		int next(char* out_str) {
+		int next(char* out_str)
+		{
 			return hotp_next(data, out_str);
 		}
 		
-		// verifies the key generated with the current counter server-side
-		int compare(const char* key, uint64_t counter) {
+		int compare(const char* key, uint64_t counter)
+		{
 			return hotp_compare(data, key, counter);
+		}
+		
+		// Caller must free the returned pointer.
+		char* build_uri(const char* issuer, const char* name, const char* digest)
+		{
+			return otpuri_build_uri(data, issuer, name, digest);
+		}
+		
+		// Pointer is automatically freed at end of object scope.
+		OTPData* data_struct()
+		{
+			return data;
+		}
+		
+		static int random_base32(size_t len, const char* chars, char* out_str)
+		{
+			return otp_random_base32(len, chars, out_str);
+		}
+		
+		static const char* default_chars()
+		{
+			return otp_DEFAULT_BASE32_CHARS;
 		}
 		
 };
