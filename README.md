@@ -21,7 +21,7 @@ _____________
 
 ## License
 
-This library is licensed under GNU General Public License v3.0.
+This library is licensed under MIT.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit. (http://www.openssl.org/)
 
