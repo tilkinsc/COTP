@@ -4,21 +4,18 @@ This module is part of a chain of OTP libraries all written in different languag
 
 A simple One Time Password (OTP) library in C/C++
 
-Compatible with Authy and Google Authenticator. Full support for QR code url is provided.
+Fully ompatible with Authy and Google Authenticator. Full support for QR code url is provided.
 
 
 ## Libraries Needed
 
-In order to utilize this library, you will need the following libraries:
-* OpenSSL is recommended to use with this library. There is a test file which has all that mess already sorted out for you.
+In order to utilize this library, you may want the following libraries:
+* OpenSSL (-lcrypto) is recommended. There is a test file which has all that mess already sorted out for you.
 
 
 ## Configuration
 
 This library works with C++, but is targeted at C. I made a .hpp header that wraps the C functions, which I find gross. Feel free to clean it up and do a pull request. I do, however, have to recommend you use the .hpp header due to namespace flooding.
-
-Make sure you mind your memsets when using the string (byte) version of the library functions. When it comes down to it, this library will convert your integer numbers to string and do a comparison byte by byte. There is no need for expensive testing - nobody knows what is going on except the key holders and the key can't be reversed because we only send a small part of the hmac. That being said, there is no support for digits > 9 yet - as this is half an int's limit. I need to switch to longs.
-
 
 _____________
 
@@ -31,23 +28,19 @@ This product includes software developed by the OpenSSL Project for use in the O
 
 ## Usage
 
-The library allows you to create a function in a specified format to communicate with the OTP generation. You will have to manually do the cryptographic functions, which is easy in OpenSSL. I suggest it just for that. Anyways, you need to encrypt them and HMAC the encryption. See the test file for pre-made function that hook up nicely in any environment.
+The library allows you to create a function in a specified format to communicate with the OTP generation. You will have to manually do the cryptographic functions and time function for TOTP, which is easy in OpenSSL; I suggest it just for that. See the test file for pre-made functions that will hook you up.
 
-One thing you need to mind is the bits when doing the encryption+HMAC. You should be using SHA1 because that is what is widely supported and only available from Google Authenticator (name-brand dominant I guess). The SHA1 gives you 160 bits, or 20 bytes. See the test source for for more information. Also, you may just want to check out the header anyways. Learn how this library works.
-
-To use this library, pick either TOTP or HOTP then use the provided files - giving the functions what they need. The only thing you really need to pay attention is settings. Check out the test file, as it will tell you what the default requirements is for Google Authenticator, but you should always be using Authy (it is the most lenient).
-
-You need to memset any buffer you give to the library to get information or calloc everything.
-
-One final note: If you want me to translate the OTP language in your language, ask.
+1. Create OTPData with the required information using otp_new().
+2. You need to memset any buffer you give to the library to get information or calloc everything.
+3. Invoke functions you need and pass said OTPData.
 
 ## Building
 
-The examples use OpenSSL with `-lcrypto` and `-lgdi32` for cryptographic functions.
+The examples use OpenSSL with `-lcrypto` for cryptographic functions.
 
-This was built for support with C89. See the test/build.bat file for guidance. It is simpley compiling all the CUs as C. If you don't want to use the .hpp C++ wrapper, you can extern "C" #include "cotp.h" which will flood your global space with the header file contents.
+See the test/build.bat file for guidance. It is simply compiling all the CUs as C. If you don't want to use the .hpp C++ wrapper, you can extern "C" #include "cotp.h" which will flood your global space with the header file contents.
 
 ## TODO
 
-* SHA256 is broken
-* SHA512 is broken
+* SHA256 needs verified if its working fully
+* SHA512 needs verified if its working fully
