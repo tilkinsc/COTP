@@ -4,7 +4,7 @@ This module is part of a chain of OTP libraries all written in different languag
 
 A simple One Time Password (OTP) library in C/C++
 
-Fully ompatible with Authy and Google Authenticator. Full support for QR code url is provided.
+Fully compatible with Authy and Google Authenticator. Full support for QR code URL is provided.
 
 
 ## Libraries Needed
@@ -42,5 +42,5 @@ See the test/build.bat file for guidance. It is simply compiling all the CUs as 
 
 ## TODO
 
-* SHA256 needs verified if its working fully
-* SHA512 needs verified if its working fully
+* SHA256 needs to be verified if its working fully
+* SHA512 needs to be verified if its working fully
