@@ -4,13 +4,13 @@ This module is part of a chain of OTP libraries all written in different languag
 
 A simple One Time Password (OTP) library in C/C++
 
-Fully compatible with Authy and Google Authenticator. Full support for QR code URL is provided.
+Fully compatible with Authy and Google Authenticator. Full support for QR Code URI is provided. Does not support generating QR Code images.
 
 
 ## Libraries Needed
 
 In order to utilize this library, you may want the following libraries:
-* OpenSSL (-lcrypto) is recommended. There is a test file which has all that mess already sorted out for you.
+* OpenSSL (-lcrypto) is recommended. There is a test file, which has all that setup mess already sorted out for you.
 
 
 ## Configuration
@@ -28,17 +28,22 @@ This product includes software developed by the OpenSSL Project for use in the O
 
 ## Usage
 
-The library allows you to create a function in a specified format to communicate with the OTP generation. You will have to manually do the cryptographic functions and time function for TOTP, which is easy in OpenSSL; I suggest it just for that. See the test file for pre-made functions that will hook you up.
+This library allows you to create a function in a specified format to communicate with the OTP generation. You will have to manually do the cryptographic functions and time returning function for TOTP, which is easy in OpenSSL; I suggest it just for that. See the test file for pre-made functions that will hook you up.
 
-1. Create OTPData with the required information using otp_new().
-2. You need to memset any buffer you give to the library to get information or calloc everything.
-3. Invoke functions you need and pass said OTPData.
+1. Create OTPData with the required information using *otp_new().
+2. Create a COTP_ALGO function which SHA1/256/512's then HMAC's its input and returns 0 for error or the result length
+3. Create a COTP_TIME function which returns a uint64_t that is the current time. Seconds or (recommended) milliseconds.
+4. Invoke the functions you need and pass your OTPData structure pointer.
 
 ## Building
 
 The examples use OpenSSL with `-lcrypto` for cryptographic functions.
 
 See the test/build.bat file for guidance. It is simply compiling all the CUs as C. If you don't want to use the .hpp C++ wrapper, you can extern "C" #include "cotp.h" which will flood your global space with the header file contents.
+
+## Security Concerns
+
+* otp_random_base32 uses the unsecure rand() to generate random base32 characters. A secure time is a must. Prioritize using milliseconds as your seed. Otherwise, please roll your own base32 standard compliant generator. Having multiple consumers with the same base32 secret key is not ideal. For example, if 10 accounts were made at the same second and you are using seconds to seed rand, then you end up having 10 users with 10 same base32 secret keys. Since this library suggests you use openssl, there may be convenience functions while we flush out a solution.
 
 ## TODO
 
