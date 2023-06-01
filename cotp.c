@@ -26,23 +26,21 @@ const char* OTPType_asString(OTPType type)
 }
 
 /*
-	Allocates a new OTPData struct. Initializes its values.
+	Initializes an OTPData structure.
 	
+	OTPData is a non-initialized structure
 	base32_secret is a base32 compliant secret string
 	algo is the hmac algorithm implementation for hash and hmac
 	digits is the amount of output numbers for the OTP
 	
-	Do not forget to call otp_free(...)
+	Only call otp_free(...) if you malloc/calloc'd the OTPData* structure
 	
 	Returns
-			A pointer to a new struct OTPData struct
+			The same pointer passed through data
 		error, 0
 */
-OTPData* otp_new(const char* base32_secret, COTP_ALGO algo, uint32_t digits)
+OTPData* otp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint32_t digits)
 {
-	OTPData* data = malloc(sizeof(OTPData));
-	if(data == 0)
-		return 0;
 	data->digits = digits ? digits : 6;
 	data->interval = 0;
 	data->count = 0;
@@ -57,55 +55,58 @@ OTPData* otp_new(const char* base32_secret, COTP_ALGO algo, uint32_t digits)
 }
 
 /*
-	Allocates a new OTPData struct. Initializes
-	  its values. Extends off of otp_new.
+	Initializes an OTPData structure. Extends off of otp_new.
 	
+	OTPData is a non-initialized structure
 	base32_secret is a base32 compliant secret string
 	algo is the hmac algorithm implementation for hash and hmac
 	digits is the amount of output numbers for the OTP
 	interval is the amount of time a code is valid for in seconds
 	
-	Do not forget to call otp_free(...)
+	Only call otp_free(...) if you malloc/calloc'd the OTPData* structure
 	
 	Returns
-			A pointer to a new struct OTPData struct
+			The same pointer passed through data
 		error, 0
 */
-OTPData* totp_new(const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval)
+OTPData* totp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval)
 {
-	OTPData* data = otp_new(base32_secret, algo, digits);
-	data->interval = interval;
-	data->time = time;
-	data->method = TOTP;
+	OTPData* tdata = otp_new(data, base32_secret, algo, digits);
+	tdata->interval = interval;
+	tdata->time = time;
+	tdata->method = TOTP;
+	
 	return data;
 }
 
 /*
-	Allocates a new OTPData struct. Initializes
-	  its values. Extends off of otp_new.
+	Initializes an OTPData structure.
 	
+	OTPData is a non-initialized structure
 	base32_secret is a base32 compliant secret string
 	algo is the hmac algorithm implementation for hash and hmac
 	digits is the amount of output numbers for the OTP
 	count is the current counter
 	
-	Do not forget to call otp_free(...)
+	Only call otp_free(...) if you malloc/calloc'd the OTPData* structure
 	
 	Returns
 			A pointer to a new struct OTPData struct
 		error, 0
 */
-OTPData* hotp_new(const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count)
+OTPData* hotp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count)
 {
-	OTPData* data = otp_new(base32_secret, algo, digits);
-	data->method = HOTP;
-	data->count = count;
+	OTPData* hdata = otp_new(data, base32_secret, algo, digits);
+	hdata->method = HOTP;
+	hdata->count = count;
+	
 	return data;
 }
 
 
 /*
-	Frees data allocated by *otp_new(...) calls.
+	Semantic convenience method.
+	Equivalent to free(data).
 */
 void otp_free(OTPData* data)
 {
@@ -125,6 +126,7 @@ int otp_byte_secret(OTPData* data, char* out_str)
 {
 	if(out_str == NULL || strlen(data->base32_secret) % 8 != 0)
 		return OTP_ERROR;
+	
 	int n = 5;
 	for (size_t i=0; ; i++)
 	{
@@ -140,17 +142,21 @@ int otp_byte_secret(OTPData* data, char* out_str)
 				n = c - 'A';
 			if (c >= '2' && c <= '7')
 				n = 26 + c - '2';
-			if (n < 0) {
+			if (n < 0)
+			{
 				n = octet;
 				break;
 			}
 			out_str[i*5 + octet] |= -offset > 0 ? n >> -offset : n << offset;
 			if (offset < 0)
+			{
 				out_str[i*5 + octet + 1] = -(8 + offset) > 0 ? n >> -(8 + offset) : n << (8 + offset);
+			}
 		}
 		if(n < 5)
 			break;
 	}
+	
 	return OTP_OK;
 }
 
@@ -169,10 +175,12 @@ int otp_num_to_bytestring(uint64_t integer, char* out_str)
 		return OTP_ERROR;
 	
 	size_t i = 7;
-	while  (integer != 0) {
+	while  (integer != 0)
+	{
 		out_str[i--] = integer & 0xFF;
 		integer >>= 8;
 	}
+	
 	return OTP_OK;
 }
 
@@ -194,9 +202,13 @@ int otp_random_base32(size_t len, const char* chars, char* out_str)
 {
 	if(chars == NULL || out_str == NULL)
 		return OTP_ERROR;
+	
 	len = len > 0 ? len : 16;
 	for (size_t i=0; i<len; i++)
+	{
 		out_str[i] = chars[rand()%32];
+	}
+	
 	return OTP_OK;
 }
 
@@ -216,22 +228,18 @@ int otp_random_base32(size_t len, const char* chars, char* out_str)
 */
 int totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_time)
 {
-	char* time_str = calloc(data->digits+1, sizeof(char));
-	if (time_str == 0) {
+	char time_str[data->digits+1];
+	memset(time_str, 0, data->digits+1);
+	
+	if(totp_at(data, for_time, offset, time_str) == 0)
 		return OTP_ERROR;
-	}
-	if(totp_at(data, for_time, offset, time_str) == 0) {
-		free(time_str);
-		return OTP_ERROR;
-	}
+	
 	for (size_t i=0; i<data->digits; i++)
 	{
-		if(key[i] != time_str[i]) {
-			free(time_str);
+		if(key[i] != time_str[i])
 			return OTP_ERROR;
-		}
 	}
-	free(time_str);
+	
 	return OTP_OK;
 }
 
@@ -280,19 +288,20 @@ int totp_now(OTPData* data, char* out_str)
 */
 int totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window)
 {
-	if(valid_window < 0) {
+	if(valid_window < 0)
 		return OTP_ERROR;
-	}
-	if(valid_window > 0) {
+	
+	if(valid_window > 0)
+	{
 		for (int64_t i=-valid_window; i<valid_window+1; i++)
 		{
 			int cmp = totp_compare(data, key, i, for_time);
-			if(cmp == 1) {
+			if(cmp == 1)
 				return cmp;
-			}
 		}
 		return OTP_ERROR;
 	}
+	
 	return totp_compare(data, key, 0, for_time);
 }
 
@@ -328,6 +337,7 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time)
 {
 	if(data->interval <= 0)
 		return OTP_ERROR;
+	
 	return for_time/data->interval;
 }
 
@@ -346,22 +356,18 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time)
 */
 int hotp_compare(OTPData* data, const char* key, uint64_t counter)
 {
-	char* cnt_str = calloc(data->digits+1, sizeof(char));
-	if(cnt_str == 0) {
+	char cnt_str[data->digits+1];
+	memset(cnt_str, 0, data->digits+1);
+	
+	if(hotp_at(data, counter, cnt_str) == 0)
 		return OTP_ERROR;
-	}
-	if(hotp_at(data, counter, cnt_str) == 0) {
-		free(cnt_str);
-		return OTP_ERROR;
-	}
+	
 	for (size_t i=0; i<data->digits; i++)
 	{
-		if(key[i] != cnt_str[i]) {
-			free(cnt_str);
+		if(key[i] != cnt_str[i])
 			return OTP_ERROR;
-		}
 	}
-	free(cnt_str);
+	
 	return OTP_OK;
 }
 
@@ -406,19 +412,26 @@ int hotp_next(OTPData* data, char* out_str)
 */
 int otp_generate(OTPData* data, uint64_t input, char* out_str)
 {
-	char* byte_string = calloc(8+1, sizeof(char));
-	char* byte_secret = calloc((strlen(data->base32_secret)/8)*5 + 1, sizeof(char));
-	char* hmac = calloc(64+1, sizeof(char));
-	if(byte_string == 0
-			|| byte_secret == 0
-			|| hmac == 0
-			|| otp_num_to_bytestring(input, byte_string) == 0
+	// char* byte_string = calloc(8+1, sizeof(char));
+	// char* byte_secret = calloc((strlen(data->base32_secret)/8)*5 + 1, sizeof(char));
+	// char* hmac = calloc(64+1, sizeof(char));
+	char byte_string[8+1];
+	memset(byte_string, 0, 8+1);
+	
+	size_t bs_len = (strlen(data->base32_secret)/8)*5 + 1;
+	char byte_secret[bs_len];
+	memset(byte_secret, 0, bs_len);
+	
+	char hmac[64+1];
+	memset(hmac, 0, 64+1);
+	
+	if(otp_num_to_bytestring(input, byte_string) == 0
 			|| otp_byte_secret(data, byte_secret) == 0)
-		goto fail;
+		return OTP_ERROR;
 	
 	int hmac_len = (*(data->algo))(byte_secret, byte_string, hmac);
 	if (hmac_len == 0)
-		goto fail;
+		return OTP_ERROR;
 	
 	uint64_t offset = (hmac[hmac_len-1] & 0xF);
 	uint64_t code =
@@ -429,16 +442,10 @@ int otp_generate(OTPData* data, uint64_t input, char* out_str)
 	code %= (uint64_t) pow(10, data->digits);
 	
 	if(out_str != NULL)
+	{
 		sprintf(out_str, "%0*llu", data->digits, code);
+	}
 	
-	free(hmac);
-	free(byte_string);
-	free(byte_secret);
 	return OTP_OK;
-fail:
-	free(hmac);
-	free(byte_string);
-	free(byte_secret);
-	return OTP_ERROR;
 }
 

@@ -31,13 +31,17 @@ char* otpuri_encode_url(const char* data, size_t length)
 	for (size_t i=0; i<length; i++)
 	{
 		cData[cData_i] = data[i];
-		if (data[i] < 0x20 || data[i] >= 0x7F) {
+		if (data[i] < 0x20 || data[i] >= 0x7F)
+		{
 			cData_i += snprintf(cData + cData_i, 3+1, "%%%.2X", data[i]);
 			cData_i--;
-		} else {
+		}
+		else
+		{
 			for (size_t j=0; j<18; j++)
 			{
-				if (to_test[j] == data[i]) {
+				if (to_test[j] == data[i])
+				{
 					cData_i += snprintf(cData + cData_i, 3+1, "%%%.2X", data[i]);
 					cData_i--;
 					break;
@@ -63,13 +67,14 @@ char* otpuri_encode_url(const char* data, size_t length)
 	digest is the null-terminated string of HMAC encryption algorithm
 	
 	Returns
-			url-safe URI data string
+			Pointer to malloc'd url-safe URI string
 		error, 0
 		
 */
 char* otpuri_build_uri(OTPData* data, const char* issuer, const char* name, const char* digest) {
 	if(issuer == 0 || name == 0)
 		return 0;
+	
 	char* cissuer = otpuri_encode_url(issuer, strlen(issuer));
 	char* cname = otpuri_encode_url(name, strlen(name));
 	
@@ -92,7 +97,8 @@ char* otpuri_build_uri(OTPData* data, const char* issuer, const char* name, cons
 					+ strlen(secret) + strlen(cissuer) + strlen(cdigest) + strlen(digits);
 	
 	const char* otp_type = 0;
-	switch(data->method) {
+	switch(data->method)
+	{
 		case TOTP:
 			otp_type = "totp";
 			time = calloc(9 + 11 + 1, sizeof(char));
@@ -126,7 +132,9 @@ char* otpuri_build_uri(OTPData* data, const char* issuer, const char* name, cons
 	strncat(args, "&digits=", 9);
 	strcat(args, digits);
 	if(time != 0)
+	{
 		strcat(args, time);
+	}
 	
 	snprintf(uri, uri_len * sizeof(char), "otpauth://%s/%s:%s%s", otp_type, cissuer, cname, args);
 	

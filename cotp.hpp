@@ -3,7 +3,8 @@
 
 #if defined(__cplusplus)
 
-extern "C" {
+extern "C"
+{
 	#include "cotp.h"
 	#include "otpuri.h"
 }
@@ -17,13 +18,13 @@ class OTP
 		OTPData* data;
 		
 	public:
-		OTP(const char* base32_secret, COTP_ALGO algo, uint32_t digits)
+		OTP(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint32_t digits)
 		{
-			data = otp_new(base32_secret, algo, digits);
+			this->data = otp_new(data, base32_secret, algo, digits);
 		}
+		
 		~OTP()
 		{
-			otp_free(data);
 			data = nullptr;
 		}
 		
@@ -48,7 +49,6 @@ class OTP
 			return otpuri_build_uri(data, issuer, name, digest);
 		}
 		
-		// Pointer is automatically freed at end of object scope.
 		OTPData* data_struct()
 		{
 			return data;
@@ -61,7 +61,7 @@ class OTP
 		
 		static const char* default_chars()
 		{
-			return otp_DEFAULT_BASE32_CHARS;
+			return OTP_DEFAULT_BASE32_CHARS;
 		}
 		
 };
@@ -73,13 +73,13 @@ class TOTP
 		OTPData* data;
 		
 	public:
-		TOTP(const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval)
+		TOTP(OTPData* data, const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval)
 		{
-			data = totp_new(base32_secret, algo, time, digits, interval);
+			this->data = totp_new(data, base32_secret, algo, time, digits, interval);
 		}
+		
 		~TOTP()
 		{
-			otp_free(data);
 			data = nullptr;
 		}
 		
@@ -114,7 +114,6 @@ class TOTP
 			return otpuri_build_uri(data, issuer, name, digest);
 		}
 		
-		// Pointer is automatically freed at end of object scope.
 		OTPData* data_struct()
 		{
 			return data;
@@ -127,7 +126,7 @@ class TOTP
 		
 		static const char* default_chars()
 		{
-			return otp_DEFAULT_BASE32_CHARS;
+			return OTP_DEFAULT_BASE32_CHARS;
 		}
 		
 };
@@ -139,13 +138,13 @@ class HOTP
 		OTPData* data;
 		
 	public:
-		HOTP(const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count)
+		HOTP(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count)
 		{
-			data = hotp_new(base32_secret, algo, digits, count);
+			this->data = hotp_new(data, base32_secret, algo, digits, count);
 		}
+		
 		~HOTP()
 		{
-			otp_free(data);
 			data = nullptr;
 		}
 		
@@ -170,7 +169,6 @@ class HOTP
 			return otpuri_build_uri(data, issuer, name, digest);
 		}
 		
-		// Pointer is automatically freed at end of object scope.
 		OTPData* data_struct()
 		{
 			return data;
@@ -183,7 +181,7 @@ class HOTP
 		
 		static const char* default_chars()
 		{
-			return otp_DEFAULT_BASE32_CHARS;
+			return OTP_DEFAULT_BASE32_CHARS;
 		}
 		
 };

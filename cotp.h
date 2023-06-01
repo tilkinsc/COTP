@@ -12,7 +12,8 @@
 	Default characters used in BASE32 digests.
 	For use with otp_random_base32()
 */
-static const char otp_DEFAULT_BASE32_CHARS[32] = {
+static const char OTP_DEFAULT_BASE32_CHARS[32] =
+{
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
 	'U', 'V', 'W', 'X', 'Y', 'Z', '2', '3', '4', '5',
@@ -25,7 +26,8 @@ static const char otp_DEFAULT_BASE32_CHARS[32] = {
 	  method you are using. Necessary
 	  when you go to generate a URI.
 */
-typedef enum OTPType {
+typedef enum OTPType
+{
 	OTP, TOTP, HOTP
 } OTPType;
 
@@ -56,7 +58,8 @@ typedef uint64_t (*COTP_TIME)();
 	If you know what you are doing,
 		feel free to initialize this yourself.
 */
-typedef struct OTPData {
+typedef struct OTPData
+{
 	uint32_t digits;
 	uint32_t interval; // TOTP exclusive
 	uint64_t count;
@@ -72,9 +75,9 @@ typedef struct OTPData {
 /*
 	Struct initialization functions
 */
-OTPData* otp_new(const char* base32_secret, COTP_ALGO algo, uint32_t digits);
-OTPData* totp_new(const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval);
-OTPData* hotp_new(const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count);
+OTPData* otp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint32_t digits);
+OTPData* totp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, COTP_TIME time, uint32_t digits, uint32_t interval);
+OTPData* hotp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint32_t digits, uint64_t count);
 
 /*
 	OTP free function
