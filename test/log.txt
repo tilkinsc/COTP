@@ -2,27 +2,59 @@
 tdata->digits: `6`
 tdata->interval: `30`
 tdata->method: `1`
-tdata->algo: `0x55e09e6b05b5`
-tdata->time: `0x55e09e6b076e`
+tdata->algo: `0x00007ff738402646`
+tdata->time: `0x00007ff73840279f`
 tdata->base32_secret: `JBSWY3DPEHPK3PXP`
 // totp tdata //
 
 \\ hotp hdata \\
 hdata->digits: `6`
 hdata->method: `2`
-hdata->algo: `0x55e09e6b05b5`
+hdata->algo: `0x00007ff738402646`
 hdata->base32_secret: `JBSWY3DPEHPK3PXP`
 hdata->count: `0`
 // hotp hdata //
 
-Current Time: `1684841476`
+Current Time: `1685582633`
+TOTP URI: `otpauth://totp/name1:account%40whatever1.com?secret=JBSWY3DPEHPK3PXP&issuer=name1&algorithm=SHA1&digits=6&period=183824600271`
+
+HOTP URI: `otpauth://hotp/name2:account%40whatever2.com?secret=JBSWY3DPEHPK3PXP&issuer=name2&algorithm=SHA1&digits=6&counter=52`
+
+Generated BASE32 Secret: `QDCMJUDWNHNP2TLI`
+
+totp_now(): `674088` `1`
+totp_at(0, 0): `282760` `1`
+TOTP Verification 1: `false`
+TOTP Verification 2: `true`
+
+hotp_at(1): `996554` `1`
+HOTP Verification 1: `false`
+HOTP Verification 2: `true`
+\\ totp tdata \\
+tdata->digits: `6`
+tdata->interval: `30`
+tdata->method: `1`
+tdata->algo: `0x7ff6518525f2`
+tdata->time: `0x7ff651852748`
+tdata->base32_secret: `JBSWY3DPEHPK3PXP`
+// totp tdata //
+
+\\ hotp hdata \\
+hdata->digits: `6`
+hdata->method: `2`
+hdata->algo: `0x7ff6518525f2`
+hdata->base32_secret: `JBSWY3DPEHPK3PXP`
+hdata->count: `0`
+// hotp hdata //
+
+Current Time: `1685582633`
 TOTP URI: `otpauth://totp/name1:account%40whatever1.com?secret=JBSWY3DPEHPK3PXP&issuer=name1&algorithm=SHA1&digits=6&period=30`
 
 HOTP URI: `otpauth://hotp/name2:account%40whatever2.com?secret=JBSWY3DPEHPK3PXP&issuer=name2&algorithm=SHA1&digits=6&counter=52`
 
-Generated BASE32 Secret: `HRKHRWX2XV366XEL`
+Generated BASE32 Secret: `QDCMJUDWNHNP2TLI`
 
-totp_now(): `741616` `1`
+totp_now(): `674088` `1`
 totp_at(0, 0): `282760` `1`
 TOTP Verification 1: `false`
 TOTP Verification 2: `true`
