@@ -1,0 +1,3 @@
+[submodule "vendor/mk_simple"]
+	path = vendor/mk_simple
+	url = https://github.com/GruelingPine185/mk_simple
