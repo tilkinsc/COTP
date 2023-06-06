@@ -1,7 +1,9 @@
 *.exe
 *.dll
+*.so
 *.a
 *.o
 
+.vscode/
 compile_commands.json
 .cache/
