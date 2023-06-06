@@ -42,6 +42,7 @@ ifeq ($(os), Linux)
 	lib_ext = so
 endif # Linux
 
+
 sta_lib := $(bin_dir)/$(lib_name).a
 dyn_lib := $(bin_dir)/$(lib_name).$(lib_ext)
 
@@ -54,7 +55,13 @@ all:
 	@$(MAKE) libs
 	@$(MAKE) tests
 clean:
+ifeq ($(os), Windows_NT)
+	del \f $(wildcard *.$(project_ext) *.o *.a *.$(lib_ext))
+	rmdir $(wildcard $(bin_dir))
+endif # Windows_NT
+ifeq ($(os), Darwin)
 	rm -rf $(wildcard $(bin_dir) *.$(project_ext) *.o *.a *.$(lib_ext))
+endif # Linux
 libs:
 	@$(MAKE) static
 	@$(MAKE) dynamic
