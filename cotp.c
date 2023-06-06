@@ -443,7 +443,7 @@ int otp_generate(OTPData* data, uint64_t input, char* out_str)
 	
 	if(out_str != NULL)
 	{
-		sprintf(out_str, "%0*llu", data->digits, code);
+		sprintf(out_str, "%0*zu", data->digits, code);
 	}
 	
 	return OTP_OK;

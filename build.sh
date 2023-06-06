@@ -10,8 +10,8 @@ echo "Building static library"
 ar rcs -o libcotp.a cotp.o otpuri.o
 
 echo "Building test C application"
-gcc -O2 -Wall -L . -I . -o test_c test/main.c -lcotp -lcrypto -lm
+gcc -O2 -Wall -L . -I . -o test_c test/main.c libcotp.a -lcrypto -lm
 
 echo "Building test C++ application"
-g++ -O2 -Wall -L . -I . -o test_cpp test/main.cpp -lcotp -lcrypto
+g++ -O2 -Wall -L . -I . -o test_cpp test/main.cpp libcotp.a -lcrypto
 
