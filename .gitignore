@@ -7,3 +7,8 @@
 .vscode/
 compile_commands.json
 .cache/
+
+test_c
+test_c.exe
+test_cpp
+test_cpp.exe
