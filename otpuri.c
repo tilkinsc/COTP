@@ -108,7 +108,7 @@ char* otpuri_build_uri(OTPData* data, const char* issuer, const char* name, cons
 		case HOTP:
 			otp_type = "hotp";
 			time = calloc(10 + 11 + 1, sizeof(char));
-			snprintf(time, 10 + 11 + 1, "%s%llu", "&counter=", data->count);
+			snprintf(time, 10 + 11 + 1, "%s%zu", "&counter=", data->count);
 			arg_len += strlen(time);
 			break;
 		default:
