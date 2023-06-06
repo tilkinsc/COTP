@@ -13,5 +13,5 @@ echo Building test C application
 gcc -O2 -Wall -L . -I . -o test_c.exe test/main.c -lcotp -lcrypto -lgdi32
 
 echo Building test C++ application
-g++ -O2 -Wall -L . -I . -o test_c++.exe test/main.cpp -lcotp -lcrypto -lgdi32
+g++ -O2 -Wall -L . -I . -o test_cpp.exe test/main.cpp -lcotp -lcrypto -lgdi32
 
