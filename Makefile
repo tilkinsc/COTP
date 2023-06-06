@@ -88,7 +88,12 @@ $(sta_lib): $(c_sta_objects)
 	ar rcs $@ $^
 
 $(bin_dir)/$(dyn_dir)/%.o: %.c $(c_headers) $(bin_dir)/$(dyn_dir)
+ifeq ($(os), Windows_NT)
+	$(c_compiler) $(c_flags) -shared -c $< -o $@
+endif # Windows_NT
+ifeq ($(os), Linux)
 	$(c_compiler) $(c_flags) -fPIC -c $< -o $@
+endif # Linux
 
 $(dyn_lib): $(c_dyn_objects)
 	$(c_compiler) $(c_flags) -shared $^ -o $@ $(c_ldflags)
