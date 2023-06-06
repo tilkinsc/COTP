@@ -131,10 +131,10 @@ int main(int argc, char** argv)
 	printf("hdata->method: `%u`\n", hdata->method);
 	printf("hdata->algo: `0x%p`\n", hdata->algo);
 	printf("hdata->base32_secret: `%s`\n", hdata->base32_secret);
-	printf("hdata->count: `%llu`\n", hdata->count);
+	printf("hdata->count: `%zu`\n", hdata->count);
 	printf("// hotp hdata //\n\n");
 	
-	printf("Current Time: `%llu`\n\n", get_current_time());
+	printf("Current Time: `%zu`\n\n", get_current_time());
 	
 	
 	
