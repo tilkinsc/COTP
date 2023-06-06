@@ -59,7 +59,7 @@ sta_lib := $(lib_name).a
 dyn_lib := $(lib_name)$(lib_ext)
 
 test_c = test_c$(project_ext)
-test_cpp = test_c++$(project_ext)
+test_cpp = test_cpp$(project_ext)
 
 ###############################################################################
 
