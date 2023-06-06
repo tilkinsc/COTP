@@ -29,6 +29,7 @@ c_headers := $(wildcard *.h)
 c_sources := $(wildcard *.c)
 c_objects := $(patsubst %.c, %.o, $(c_sources))
 c_test_sources := $(wildcard test/*.c)
+cpp_test_sources := $(wildcard test/*.cpp)
 c_test_objects := $(pathsubst test/%.c, %.o, $(c_test_sources))
 
 # Libraries
@@ -48,9 +49,10 @@ ifeq ($(OS), Windows_NT)
 	cmd_mkdir +=
 else
 	lib_ext = .so
-	cmd_rm = rm
+	cmd_rm = rm -f
 	c_flags += -fPIC
 	cpp_flags += -fPIC
+	c_libs += -lm
 endif # Linux
 
 sta_lib := $(lib_name).a
@@ -66,19 +68,19 @@ test_cpp = test_c++$(project_ext)
 all: libs tests
 
 clean:
-	$(cmd_rm) $(c_sta_objects) $(c_dyn_objects)
+	$(cmd_rm) $(c_objects) $(c_test_objects) $(sta_lib) $(dyn_lib) $(test_c) $(test_cpp)
 
 libs: static dynamic
 
-tests: test_c test_cpp
+tests: prog_test_c prog_test_cpp
 
 static: $(sta_lib)
 
 dynamic: $(dyn_lib)
 
-test_c: $(test_c)
+prog_test_c: $(test_c)
 
-test_cpp: $(test_cpp)
+prog_test_cpp: $(test_cpp)
 
 ###############################################################################
 
@@ -91,8 +93,8 @@ $(sta_lib): $(c_objects)
 $(dyn_lib): $(c_dyn_objects)
 	$(c_compiler) $(c_ldflags) -o $@ $^ $(c_libs)
 
-$(test_c): $(tst_dir)\main.c $(sta_lib)
-	$(c_compiler) $(c_testflags) -L$(bin_dir) -o $@ $< $(c_libs) $(sta_lib)
+$(test_c): $(c_test_sources) $(sta_lib)
+	$(c_compiler) $(c_testflags) -o $@ $< $(sta_lib) $(c_libs)
 
-$(test_cpp): $(tst_dir)\main.cpp $(sta_lib)
-	$(cpp_compiler) $(cpp_testflags) -L$(bin_dir) -o $@ $< $(cpp_libs) $(sta_lib)
+$(test_cpp): $(cpp_test_sources) $(sta_lib)
+	$(cpp_compiler) $(cpp_testflags) -o $@ $< $(sta_lib) $(cpp_libs)
