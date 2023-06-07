@@ -47,6 +47,6 @@ jobs:
       with:
         name: windows-binaries.7z
         path: |
-          *.a
-          *.dll
+          "*.a"
+          "*.dll"
 
