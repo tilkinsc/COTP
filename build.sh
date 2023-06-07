@@ -4,7 +4,7 @@ echo "Compiling"
 gcc -O2 -Wall -shared -fPIC -c cotp.c otpuri.c
 
 echo "Building SO"
-gcc -O2 -Wall -shared -o libcotp.so cotp.o otpuri.o
+gcc -O2 -Wall -shared -o libcotp.so cotp.o otpuri.o  -lcrypto
 
 echo "Building static library"
 ar rcs -o libcotp.a cotp.o otpuri.o
