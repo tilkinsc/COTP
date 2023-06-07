@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  linux-build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -24,3 +24,21 @@ jobs:
       with:
         name: Linux Binaries
         path: linux-binaries.7z
+  windows-build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: make tests
+      run: make tests
+    - name: Test C
+      run: test_c.exe
+    - name: Test C++
+      run: test_cpp.exe
+    - name: Migrate binaries
+      run: 7z a windows-binaries.7z *.a *.dll
+    - uses: actions/upload-artifact@v3
+      name: upload binaries
+      with:
+        name: Windows Binaries
+        path: windows-binaries.7z
+
