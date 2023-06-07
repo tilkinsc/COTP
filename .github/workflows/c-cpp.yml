@@ -11,15 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: make libs
-      run: make libs
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
     - name: make tests
       run: make tests
     - name: Test C
       run: ./test_c
     - name: Test C++
       run: ./test_cpp
+    - name: Migrate binaries
+      run: |
+        mkdir linux-binaries
+        mv *.{a,so} linux-binaries
+        7z a linux-binaries.7z linux-binaries
+        mkdir output
+        mv linux-binaries.7z output
+    - uses: actions/upload-artifact@v2
+      name: upload binaries
+      with:
+        name: Linux Binaries
+        path: output
