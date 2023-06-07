@@ -24,7 +24,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       name: upload binaries
       with:
-        name: Linux Binaries
+        name: linux-binaries
         path: linux-binaries.7z
   windows-build:
     runs-on: windows-latest
