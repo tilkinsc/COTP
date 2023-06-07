@@ -11,11 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: make
-      run: make
+    - name: make libs
+      run: make libs
   test:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+    - name: make tests
     - name: Test C
       run: ./test_c
     - name: Test C++
