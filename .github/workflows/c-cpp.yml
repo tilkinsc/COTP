@@ -24,8 +24,8 @@ jobs:
       with:
         name: linux-binaries
         path: |
-          *.a
-          *.so
+          "*.a"
+          "*.so"
   windows-build:
     runs-on: windows-latest
     if: false
