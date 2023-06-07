@@ -24,8 +24,8 @@ jobs:
       with:
         name: linux-binaries
         path: |
-          "*.a"
-          "*.so"
+          *.a
+          *.so
   windows-build:
     runs-on: windows-latest
     if: false
@@ -47,6 +47,6 @@ jobs:
       with:
         name: windows-binaries.7z
         path: |
-          "*.a"
-          "*.dll"
+          *.a
+          *.dll
 
