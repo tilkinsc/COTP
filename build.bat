@@ -4,7 +4,7 @@ echo Compiling
 gcc -O2 -Wall -shared -c cotp.c otpuri.c
 
 echo Building DLL
-gcc -O2 -Wall -shared -o libcotp.dll cotp.o otpuri.o
+gcc -O2 -Wall -shared -o libcotp.dll cotp.o otpuri.o -lcyrpto
 
 echo Building static library
 ar rcs -o libcotp.a cotp.o otpuri.o
