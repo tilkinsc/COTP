@@ -78,9 +78,9 @@ static: $(sta_lib)
 
 dynamic: $(dyn_lib)
 
-prog_test_c: static $(test_c)
+prog_test_c: libs $(test_c)
 
-prog_test_cpp: static $(test_cpp)
+prog_test_cpp: libs $(test_cpp)
 
 ###############################################################################
 
