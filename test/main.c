@@ -95,7 +95,7 @@ uint64_t get_current_time()
 	struct timeval sys_time;
 	gettimeofday(&sys_time, NULL);
 	
-	milliseconds = currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
+	milliseconds = sys_time.tv_sec * 1000 + sys_time.tv_usec / 1000;
 #endif
 	
 	return milliseconds;
