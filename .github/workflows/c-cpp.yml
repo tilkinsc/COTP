@@ -28,7 +28,10 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
-    - name: make tests
+    - uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+      name: make tests
       run: make tests
     - name: Test C
       run: test_c.exe
