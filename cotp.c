@@ -7,6 +7,8 @@
 #include <time.h>
 #include <math.h>
 
+#include <openssl/rand.h>
+
 /*
 	Converts an OTPType enum to string.
 	
@@ -185,9 +187,9 @@ int otp_num_to_bytestring(uint64_t integer, char* out_str)
 }
 
 /*
-	Generates a valid base32 number.
+	Generates a valid secured random base32 string.
 	
-	if len == 0, len = 16
+	if len <= 0, len = 16
 	
 	len is the (strlen of out_str) - 1
 	chars is the base32 charset
@@ -204,9 +206,14 @@ int otp_random_base32(size_t len, const char* chars, char* out_str)
 		return OTP_ERROR;
 	
 	len = len > 0 ? len : 16;
+	
+	unsigned char rand_buffer[len];
+	if (RAND_bytes(rand_buffer, len) != 1)
+		return OTP_ERROR;
+	
 	for (size_t i=0; i<len; i++)
 	{
-		out_str[i] = chars[rand()%32];
+		out_str[i] = chars[rand_buffer[i] % 32];
 	}
 	
 	return OTP_OK;

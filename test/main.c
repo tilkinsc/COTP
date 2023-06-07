@@ -2,13 +2,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
-#include "../cotp.h"
-#include "../otpuri.h"
+#if defined(_WIN32)
+#	include <sysinfoapi.h>
+#elif defined(__linux__)
+#	include <sys/time.h>
+#else
+#	error "OS not supported."
+#endif
 
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+
+#include "../cotp.h"
+#include "../otpuri.h"
 
 
 static const int32_t SHA1_BYTES   = 160 / 8;	// 20
@@ -73,7 +80,25 @@ int hmac_algo_sha512(const char* byte_secret, const char* byte_string, char* out
 // TODO: use a secure random generator
 uint64_t get_current_time()
 {
-	return (uint64_t) time(NULL);
+	uint64_t milliseconds = 0;
+	
+#if defined(_WIN32)
+	FILETIME fileTime;
+	GetSystemTimeAsFileTime(&fileTime);
+	
+	ULARGE_INTEGER largeInteger;
+	largeInteger.LowPart = fileTime.dwLowDateTime;
+	largeInteger.HighPart = fileTime.dwHighDateTime;
+	
+	milliseconds = (largeInteger.QuadPart - 116444736000000000ULL) / 10000;
+#elif defined(__linux__)
+	struct timeval sys_time;
+	gettimeofday(&sys_time, NULL);
+	
+	milliseconds = currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
+#endif
+	
+	return milliseconds;
 }
 
 

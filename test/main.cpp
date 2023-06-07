@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
-#include <ctime>
+#include <chrono>
 
 #include "../cotp.hpp"
 
@@ -79,7 +79,12 @@ int hmac_algo_sha512(const char* byte_secret, const char* byte_string, char* out
 // TODO: use a secure random generator
 uint64_t get_current_time()
 {
-	return (uint64_t) time(NULL);
+	using namespace std::chrono;
+	
+	auto now = system_clock::now();
+	auto dur = now.time_since_epoch();
+	
+	return duration_cast<chrono::milliseconds>(dur).count();
 }
 
 
