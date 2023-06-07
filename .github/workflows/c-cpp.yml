@@ -19,13 +19,9 @@ jobs:
       run: ./test_cpp
     - name: Migrate binaries
       run: |
-        mkdir linux-binaries
-        mv *.{a,so} linux-binaries
-        7z a linux-binaries.7z linux-binaries
-        mkdir output
-        mv linux-binaries.7z output
+        7z a linux-binaries.7z *.{a,so}
     - uses: actions/upload-artifact@v2
       name: upload binaries
       with:
         name: Linux Binaries
-        path: output
+        path: linux-binaries.7z
