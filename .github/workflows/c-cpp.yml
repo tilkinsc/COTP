@@ -31,7 +31,7 @@ jobs:
     - uses: egor-tensin/setup-mingw@v2
       with:
         platform: x64
-      name: make tests
+    - name: make tests
       run: make tests
     - name: Test C
       run: test_c.exe
