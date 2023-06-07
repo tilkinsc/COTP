@@ -19,8 +19,6 @@ jobs:
       run: ./test_c
     - name: Test C++
       run: ./test_cpp
-    - name: Migrate binaries
-      run: 7z a linux-binaries.7z *.{a,so}
     - uses: actions/upload-artifact@v3
       name: upload binaries
       with:
@@ -44,8 +42,6 @@ jobs:
       run: test_c.exe
     - name: Test C++
       run: test_cpp.exe
-    - name: Migrate binaries
-      run: 7z a windows-binaries.7z *.a *.dll
     - uses: actions/upload-artifact@v3
       name: upload binaries
       with:
