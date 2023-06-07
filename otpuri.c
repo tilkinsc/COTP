@@ -1,9 +1,7 @@
 
 #include "otpuri.h"
 
-#include <stdlib.h>
 #include <stdio.h>
-
 #include <string.h>
 
 
@@ -19,22 +17,21 @@
 			Pointer to malloc'd url-safe data string
 		error, 0
 */
-char* otpuri_encode_url(const char* data, size_t length)
+COTPRESULT otpuri_encode_url(const char* data, size_t length, char* output)
 {
+	if (data == 0 || output == 0)
+		return OTP_ERROR;
+	
 	static const char to_test[] = "\"<>#%@{}|\\^~[]` ?&";
 	
-	size_t cData_i = 0;
-	char* cData = calloc(3*length + 1, sizeof(char));
-	if (cData == 0)
-		return 0;
-	
+	size_t output_i = 0;
 	for (size_t i=0; i<length; i++)
 	{
-		cData[cData_i] = data[i];
+		output[output_i] = data[i];
 		if (data[i] < 0x20 || data[i] >= 0x7F)
 		{
-			cData_i += snprintf(cData + cData_i, 3+1, "%%%.2X", data[i]);
-			cData_i--;
+			output_i += snprintf(output + output_i, 3+1, "%%%.2X", data[i]);
+			output_i--;
 		}
 		else
 		{
@@ -42,110 +39,121 @@ char* otpuri_encode_url(const char* data, size_t length)
 			{
 				if (to_test[j] == data[i])
 				{
-					cData_i += snprintf(cData + cData_i, 3+1, "%%%.2X", data[i]);
-					cData_i--;
+					output_i += snprintf(output + output_i, 3+1, "%%%.2X", data[i]);
+					output_i--;
 					break;
 				}
 			}
 		}
-		cData_i++;
+		output_i++;
 	}
 	
-	cData = realloc(cData, cData_i + 1);
-	if (cData == 0)
-		return 0;
+	return OTP_OK;
+}
+
+/*
+	Returns the maximum expected length of an array needed to fill a buffer
+	  with an otpuri not including the null-termination.
 	
-	return cData;
+	Returns
+			Length in bytes of an array to match an otpuri generation
+*/
+size_t otpuri_strlen(OTPData* data, const char* issuer, const char* name, const char* digest)
+{
+	return strlen(issuer) * 2 * 3
+			+ strlen(name) * 3
+			+ strlen(data->base32_secret) * 3
+			+ strlen(digest) * 3
+			+ 100;
 }
 
 /*
 	Builds a valid, url-safe URI which is used for applications such as QR codes.
-	Null-terminates returned string. Caller must free the returned pointer.
 	
-	issuer is the null-terminated string of company name
-	name is the null-terminated string of username
-	digest is the null-terminated string of HMAC encryption algorithm
+	issuer is the null-terminated string of the company name
+	name is the null-terminated string of the username
+	digest is the null-terminated string of the HMAC encryption algorithm
+	output is the zero'd destination the function writes the URI to
 	
 	Returns
-			Pointer to malloc'd url-safe URI string
+			1 on success
 		error, 0
 		
 */
-char* otpuri_build_uri(OTPData* data, const char* issuer, const char* name, const char* digest) {
-	if(issuer == 0 || name == 0)
-		return 0;
+COTPRESULT otpuri_build_uri(OTPData* data, const char* issuer, const char* name, const char* digest, char* output)
+{
+	if (issuer == 0 || name == 0 || digest == 0 || output == 0)
+		return OTP_ERROR;
 	
-	char* cissuer = otpuri_encode_url(issuer, strlen(issuer));
-	char* cname = otpuri_encode_url(name, strlen(name));
-	
-	char* secret = otpuri_encode_url(data->base32_secret, strlen(data->base32_secret));
-	char* cdigest = otpuri_encode_url(digest, strlen(digest));
-	
-	char* digits = calloc(3, sizeof(char));
-	
-	char* time = 0;
-	char* args = 0;
-	
-	char* uri = 0;
-	
-	if(cissuer == 0 || cname == 0 || secret == 0 || cdigest == 0 || digits == 0)
-		goto exit;
-	
-	snprintf(digits, 2, "%Iu", data->digits);
-	
-	size_t arg_len = 9 + 9 + 12 + 9
-					+ strlen(secret) + strlen(cissuer) + strlen(cdigest) + strlen(digits);
-	
-	const char* otp_type = 0;
+	strcat(output, "otpuri://");
 	switch(data->method)
 	{
 		case TOTP:
-			otp_type = "totp";
-			time = calloc(9 + 11 + 1, sizeof(char));
-			snprintf(time, 9 + 11 + 1, "%s%Iu", "&period=", data->interval);
-			arg_len += strlen(time);
+			strcat(output, "totp");
 			break;
 		case HOTP:
-			otp_type = "hotp";
-			time = calloc(10 + 11 + 1, sizeof(char));
-			snprintf(time, 10 + 11 + 1, "%s%zu", "&counter=", data->count);
-			arg_len += strlen(time);
+			strcat(output, "hotp");
 			break;
 		default:
-			otp_type = "otp";
+			strcat(output, "otp");
 			break;
 	}
 	
-	size_t uri_len = 13 + 4 + strlen(cissuer) + strlen(cname) + arg_len;
+	strcat(output, "/");
 	
-	args = calloc(arg_len + 1, sizeof(char));
-	uri = calloc(uri_len + 1, sizeof(char));
-	if(args == 0 || uri == 0)
-		goto exit;
+	char cissuer[strlen(issuer)*3 + 1];
+	memset(cissuer, 0, strlen(issuer)*3 + 1);
+	otpuri_encode_url(issuer, strlen(issuer), cissuer);
+	strcat(output, cissuer);
 	
-	strncat(args, "?secret=", 9);
-	strcat(args, secret);
-	strncat(args, "&issuer=", 9);
-	strcat(args, cissuer);
-	strncat(args, "&algorithm=", 12);
-	strcat(args, cdigest);
-	strncat(args, "&digits=", 9);
-	strcat(args, digits);
-	if(time != 0)
+	strcat(output, ":");
+	
+	char cname[strlen(name)*3 + 1];
+	memset(cname, 0, strlen(name)*3 + 1);
+	otpuri_encode_url(name, strlen(name), cname);
+	strcat(output, cname);
+	
+	strcat(output, "?secret=");
+	char csecret[strlen(data->base32_secret)*3 + 1];
+	memset(csecret, 0, strlen(data->base32_secret)*3 + 1);
+	otpuri_encode_url(data->base32_secret, strlen(data->base32_secret), csecret);
+	strcat(output, csecret);
+	
+	strcat(output, "&issuer=");
+	strcat(output, cissuer);
+	
+	strcat(output, "&algorithm=");
+	char cdigest[strlen(digest)*3 + 1];
+	memset(cdigest, 0, strlen(digest)*3 + 1);
+	otpuri_encode_url(digest, strlen(digest), cdigest);
+	strcat(output, cdigest);
+	
+	strcat(output, "&digits=");
+	char cdigits[21];
+	memset(cdigits, 0, 21);
+	snprintf(cdigits, 21, "%Iu", data->digits);
+	strcat(output, cdigits);
+	
+	switch(data->method)
 	{
-		strcat(args, time);
+		case TOTP:
+			strcat(output, "&period=");
+			char cperiod[21];
+			memset(cperiod, 0, 21);
+			snprintf(cperiod, 21, "%Iu", data->interval);
+			strcat(output, cperiod);
+			break;
+		case HOTP:
+			strcat(output, "&counter=");
+			char ccounter[21];
+			memset(ccounter, 0, 21);
+			snprintf(ccounter, 21, "%zu", data->count);
+			strcat(output, ccounter);
+			break;
+		default:
+			break;
 	}
 	
-	snprintf(uri, uri_len * sizeof(char), "otpauth://%s/%s:%s%s", otp_type, cissuer, cname, args);
-	
-exit:
-	free(args);
-	free(time);
-	free(digits);
-	free(cdigest);
-	free(secret);
-	free(cname);
-	free(cissuer);
-	return uri;
+	return OTP_OK;
 }
 

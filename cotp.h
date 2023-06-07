@@ -4,8 +4,11 @@
 #include <stdint.h>
 
 
-#define OTP_OK		(1)
-#define OTP_ERROR	(0)
+// OTPRESULT can either be 1 (success) or 0 (error)
+typedef int COTPRESULT;
+
+#define OTP_OK		((COTPRESULT) 1)
+#define OTP_ERROR	((COTPRESULT) 0)
 
 
 /*
@@ -87,19 +90,19 @@ void otp_free(OTPData* data);
 /*
 	OTP functions
 */
-int otp_generate(OTPData* data, uint64_t input, char* out_str);
-int otp_byte_secret(OTPData* data, char* out_str);
-int otp_num_to_bytestring(uint64_t integer, char* out_str);
-int otp_random_base32(size_t len, const char* chars, char* out_str);
+COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str);
+COTPRESULT otp_byte_secret(OTPData* data, char* out_str);
+COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str);
+COTPRESULT otp_random_base32(size_t len, const char* chars, char* out_str);
 
 
 /*
 	TOTP functions
 */
-int totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_time);
-int totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_str);
-int totp_now(OTPData* data, char* out_str);
-int totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window);
+COTPRESULT totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_time);
+COTPRESULT totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_str);
+COTPRESULT totp_now(OTPData* data, char* out_str);
+COTPRESULT totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window);
 uint64_t totp_valid_until(OTPData* data, uint64_t for_time, int64_t valid_window);
 uint64_t totp_timecode(OTPData* data, uint64_t for_time);
 
@@ -107,7 +110,7 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time);
 /*
 	HOTP functions
 */
-int hotp_compare(OTPData* data, const char* key, uint64_t counter);
-int hotp_at(OTPData* data, uint64_t counter, char* out_str);
-int hotp_next(OTPData* data, char* out_str);
+COTPRESULT hotp_compare(OTPData* data, const char* key, uint64_t counter);
+COTPRESULT hotp_at(OTPData* data, uint64_t counter, char* out_str);
+COTPRESULT hotp_next(OTPData* data, char* out_str);
 

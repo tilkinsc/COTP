@@ -14,6 +14,7 @@ extern "C"
 
 
 using namespace std;
+using namespace COTP;
 
 
 static const int32_t SHA1_BYTES   = 160 / 8;	// 20
@@ -162,17 +163,23 @@ int main(int argc, char** argv)
 	char whatever1[] = "account@whatever1.com";
 	char whatever2[] = "account@whatever2.com";
 	
-	// Show example of URIs
-	// Caller must free returned strings
-	char* uri = tdata.build_uri(name1, whatever1, "SHA1");
-	cout << "TOTP URI: `" << uri << "`" << endl;
-	free(uri);
+	size_t totp_uri_max = tdata.uri_strlen(name1, whatever1, "SHA1");
+	size_t hotp_uri_max = hdata.uri_strlen(name2, whatever2, "SHA1");
+	cout << "Maximum buffer size for TOTP: `" << totp_uri_max << "`" << endl;
+	cout << "Maximum buffer size for HOTP: `" << hotp_uri_max << "`" << endl << endl;
+	
+	char totp_uri[totp_uri_max + 1];
+	memset(totp_uri, 0, totp_uri_max + 1);
+	tdata.build_uri(name1, whatever1, "SHA1", totp_uri);
+	cout << "TOTP URI: `" << totp_uri << "`" << endl;
 	
 	size_t counter = 52; // for example
 	hdata_s->count = counter;
-	uri = hdata.build_uri(name2, whatever2, "SHA1");
-	cout << "HOTP URI: `" << uri << "`" << endl << endl;
-	free(uri);
+	
+	char hotp_uri[hotp_uri_max + 1];
+	memset(hotp_uri, 0, hotp_uri_max + 1);
+	hdata.build_uri(name2, whatever2, "SHA1", hotp_uri);
+	cout << "HOTP URI: `" << hotp_uri << "`" << endl << endl;
 	
 	
 	
@@ -261,7 +268,7 @@ int main(int argc, char** argv)
 		cout << "HOTP Error hotp_at" << endl;
 		return EXIT_FAILURE;
 	}
-	cout << "hotp_at(1) pass=1: `" << hcode << "`" << "`" << hotp_err_1 << "`" << endl;
+	cout << "hotp_at(1) pass=1: `" << hcode << "`" << " `" << hotp_err_1 << "`" << endl;
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, 1 for JBSWY3DPEHPK3PXP == 996554

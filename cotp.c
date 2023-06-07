@@ -124,7 +124,7 @@ void otp_free(OTPData* data)
 			1 success
 		error, 0
 */
-int otp_byte_secret(OTPData* data, char* out_str)
+COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 {
 	if(out_str == NULL || strlen(data->base32_secret) % 8 != 0)
 		return OTP_ERROR;
@@ -171,7 +171,7 @@ int otp_byte_secret(OTPData* data, char* out_str)
 			1 success
 		error, 0
 */
-int otp_num_to_bytestring(uint64_t integer, char* out_str)
+COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str)
 {
 	if(out_str == NULL)
 		return OTP_ERROR;
@@ -200,7 +200,7 @@ int otp_num_to_bytestring(uint64_t integer, char* out_str)
 		error, 0
 
 */
-int otp_random_base32(size_t len, const char* chars, char* out_str)
+COTPRESULT otp_random_base32(size_t len, const char* chars, char* out_str)
 {
 	if(chars == NULL || out_str == NULL)
 		return OTP_ERROR;
@@ -233,7 +233,7 @@ int otp_random_base32(size_t len, const char* chars, char* out_str)
 			0 no full comparison made
 		error, 0
 */
-int totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_time)
+COTPRESULT totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_time)
 {
 	char time_str[data->digits+1];
 	memset(time_str, 0, data->digits+1);
@@ -261,7 +261,7 @@ int totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t for_ti
 			1 if otp key was successfully generated
 		error, 0
 */
-int totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_str)
+COTPRESULT totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_str)
 {
 	return otp_generate(data, totp_timecode(data, for_time) + offset, out_str);
 }
@@ -276,7 +276,7 @@ int totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_str)
 			1 if otp key was successfully generated
 		error, 0
 */
-int totp_now(OTPData* data, char* out_str)
+COTPRESULT totp_now(OTPData* data, char* out_str)
 {
 	return otp_generate(data, totp_timecode(data, data->time()), out_str);
 }
@@ -293,7 +293,7 @@ int totp_now(OTPData* data, char* out_str)
 			1 success
 		error, 0
 */
-int totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window)
+COTPRESULT totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window)
 {
 	if(valid_window < 0)
 		return OTP_ERROR;
@@ -417,7 +417,7 @@ int hotp_next(OTPData* data, char* out_str)
 			1 if otp code was successfully generated
 		error, 0
 */
-int otp_generate(OTPData* data, uint64_t input, char* out_str)
+COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 {
 	// char* byte_string = calloc(8+1, sizeof(char));
 	// char* byte_secret = calloc((strlen(data->base32_secret)/8)*5 + 1, sizeof(char));

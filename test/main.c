@@ -172,17 +172,23 @@ int main(int argc, char** argv)
 	char whatever1[] = "account@whatever1.com";
 	char whatever2[] = "account@whatever2.com";
 	
-	// Show example of URIs
-	// Caller must free returned strings
-	char* uri = otpuri_build_uri(tdata, name1, whatever1, "SHA1");
-	printf("TOTP URI: `%s`\n", uri);
-	free(uri);
+	size_t totp_uri_max = otpuri_strlen(tdata, name1, whatever1, "SHA1");
+	size_t hotp_uri_max = otpuri_strlen(hdata, name2, whatever2, "SHA1");
+	printf("Maximum buffer size for TOTP: `%zu`\n", totp_uri_max);
+	printf("Maximum buffer size for HOTP: `%zu`\n\n", hotp_uri_max);
+	
+	char totp_uri[totp_uri_max + 1];
+	memset(totp_uri, 0, totp_uri_max + 1);
+	otpuri_build_uri(tdata, name1, whatever1, "SHA1", totp_uri);
+	printf("TOTP URI (%zu bytes): `%s`\n", strlen(totp_uri), totp_uri);
 	
 	size_t counter = 52; // for example
 	hdata->count = counter;
-	uri = otpuri_build_uri(hdata, name2, whatever2, "SHA1");
-	printf("HOTP URI: `%s`\n\n", uri);
-	free(uri);
+	
+	char hotp_uri[hotp_uri_max + 1];
+	memset(hotp_uri, 0, hotp_uri_max + 1);
+	otpuri_build_uri(hdata, name2, whatever2, "SHA1", hotp_uri);
+	printf("HOTP URI (%zu bytes): `%s`\n\n", strlen(hotp_uri), hotp_uri);
 	
 	
 	
