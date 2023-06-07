@@ -25,7 +25,9 @@ jobs:
       name: upload binaries
       with:
         name: linux-binaries
-        path: linux-binaries.7z
+        path: |
+          *.a
+          *.so
   windows-build:
     runs-on: windows-latest
     if: false
@@ -47,6 +49,8 @@ jobs:
     - uses: actions/upload-artifact@v3
       name: upload binaries
       with:
-        name: Windows Binaries
-        path: windows-binaries.7z
+        name: windows-binaries.7z
+        path: |
+          *.a
+          *.dll
 
