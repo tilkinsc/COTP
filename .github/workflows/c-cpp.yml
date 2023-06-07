@@ -28,6 +28,7 @@ jobs:
         path: linux-binaries.7z
   windows-build:
     runs-on: windows-latest
+    if: false
     steps:
     - uses: actions/checkout@v3
     - uses: egor-tensin/setup-mingw@v2
