@@ -19,7 +19,7 @@
 */
 COTPRESULT otpuri_encode_url(const char* data, size_t length, char* output)
 {
-	if (data == 0 || output == 0)
+	if (data == NULL || output == NULL)
 		return OTP_ERROR;
 	
 	static const char to_test[] = "\"<>#%@{}|\\^~[]` ?&";
@@ -82,7 +82,7 @@ size_t otpuri_strlen(OTPData* data, const char* issuer, const char* name, const 
 */
 COTPRESULT otpuri_build_uri(OTPData* data, const char* issuer, const char* name, const char* digest, char* output)
 {
-	if (issuer == 0 || name == 0 || digest == 0 || output == 0)
+	if (issuer == NULL || name == NULL || digest == NULL || output == NULL)
 		return OTP_ERROR;
 	
 	strcat(output, "otpuri://");

@@ -77,7 +77,6 @@ int hmac_algo_sha512(const char* byte_secret, const char* byte_string, char* out
 	return result == 0 ? 0 : len;
 }
 
-// TODO: use a secure random generator
 uint64_t get_current_time()
 {
 	uint64_t milliseconds = 0;
@@ -90,12 +89,12 @@ uint64_t get_current_time()
 	largeInteger.LowPart = fileTime.dwLowDateTime;
 	largeInteger.HighPart = fileTime.dwHighDateTime;
 	
-	milliseconds = (largeInteger.QuadPart - 116444736000000000ULL) / 10000;
+	milliseconds = (largeInteger.QuadPart - 116444736000000000ULL) / 10000000ULL;
 #elif defined(__linux__)
 	struct timeval sys_time;
 	gettimeofday(&sys_time, NULL);
 	
-	milliseconds = sys_time.tv_sec * 1000 + sys_time.tv_usec / 1000;
+	milliseconds = sys_time.tv_sec;
 #endif
 	
 	return milliseconds;
@@ -114,7 +113,7 @@ int main(int argc, char** argv)
 	
 	
 	// Base32 secret to utilize
-	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP";
+	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP"; // JBSWY3DPEHPK3PXP 3E56263A4A655ED7
 	
 	OTPData odata1;
 	memset(&odata1, 0, sizeof(OTPData));

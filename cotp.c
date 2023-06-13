@@ -126,37 +126,48 @@ void otp_free(OTPData* data)
 */
 COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 {
-	if(out_str == NULL || strlen(data->base32_secret) % 8 != 0)
+	if (out_str == NULL || strlen(data->base32_secret) % 8 != 0)
 		return OTP_ERROR;
 	
-	int n = 5;
-	for (size_t i=0; ; i++)
+	size_t base32_length = strlen(data->base32_secret);
+	size_t num_blocks = base32_length / 8;
+	size_t output_length = num_blocks * 5;
+	
+	if (output_length == 0)
+		return OTP_OK;
+	
+	static const char* base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+	
+	for (size_t i = 0; i < num_blocks; i++)
 	{
-		n = -1;
-		out_str[i*5] = 0;
-		for (int block=0; block<8; block++)
+		unsigned int block_values[8] = { 0 };
+		
+		for (int j = 0; j < 8; j++)
 		{
-			int offset = (3 - (5*block) % 8);
-			int octet = (block*5)/8;
+			char c = data->base32_secret[i * 8 + j];
+			int found = 0;
 			
-			unsigned int c = data->base32_secret[i*8 + block];
-			if (c >= 'A' && c <= 'Z')
-				n = c - 'A';
-			if (c >= '2' && c <= '7')
-				n = 26 + c - '2';
-			if (n < 0)
+			for (int k = 0; k < 32; k++)
 			{
-				n = octet;
-				break;
+				if (c == base32_chars[k])
+				{
+					block_values[j] = k;
+					found = 1;
+					break;
+				}
 			}
-			out_str[i*5 + octet] |= -offset > 0 ? n >> -offset : n << offset;
-			if (offset < 0)
+			
+			if (!found)
 			{
-				out_str[i*5 + octet + 1] = -(8 + offset) > 0 ? n >> -(8 + offset) : n << (8 + offset);
+				return OTP_ERROR;
 			}
 		}
-		if(n < 5)
-			break;
+		
+		out_str[i * 5] = (block_values[0] << 3) | (block_values[1] >> 2);
+		out_str[i * 5 + 1] = (block_values[1] << 6) | (block_values[2] << 1) | (block_values[3] >> 4);
+		out_str[i * 5 + 2] = (block_values[3] << 4) | (block_values[4] >> 1);
+		out_str[i * 5 + 3] = (block_values[4] << 7) | (block_values[5] << 2) | (block_values[6] >> 3);
+		out_str[i * 5 + 4] = (block_values[6] << 5) | block_values[7];
 	}
 	
 	return OTP_OK;
@@ -173,13 +184,14 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 */
 COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str)
 {
-	if(out_str == NULL)
+	if (out_str == NULL)
 		return OTP_ERROR;
 	
 	size_t i = 7;
 	while  (integer != 0)
 	{
-		out_str[i--] = integer & 0xFF;
+		out_str[i] = integer & 0xFF;
+		i--;
 		integer >>= 8;
 	}
 	
@@ -202,7 +214,7 @@ COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str)
 */
 COTPRESULT otp_random_base32(size_t len, const char* chars, char* out_str)
 {
-	if(chars == NULL || out_str == NULL)
+	if (chars == NULL || out_str == NULL)
 		return OTP_ERROR;
 	
 	len = len > 0 ? len : 16;
@@ -238,12 +250,12 @@ COTPRESULT totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t
 	char time_str[data->digits+1];
 	memset(time_str, 0, data->digits+1);
 	
-	if(totp_at(data, for_time, offset, time_str) == 0)
+	if (totp_at(data, for_time, offset, time_str) == 0)
 		return OTP_ERROR;
 	
 	for (size_t i=0; i<data->digits; i++)
 	{
-		if(key[i] != time_str[i])
+		if (key[i] != time_str[i])
 			return OTP_ERROR;
 	}
 	
@@ -295,15 +307,15 @@ COTPRESULT totp_now(OTPData* data, char* out_str)
 */
 COTPRESULT totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_t valid_window)
 {
-	if(valid_window < 0)
+	if (key == NULL || valid_window < 0)
 		return OTP_ERROR;
 	
-	if(valid_window > 0)
+	if (valid_window > 0)
 	{
 		for (int64_t i=-valid_window; i<valid_window+1; i++)
 		{
 			int cmp = totp_compare(data, key, i, for_time);
-			if(cmp == 1)
+			if (cmp == 1)
 				return cmp;
 		}
 		return OTP_ERROR;
@@ -342,7 +354,7 @@ uint64_t totp_valid_until(OTPData* data, uint64_t for_time, int64_t valid_window
 */
 uint64_t totp_timecode(OTPData* data, uint64_t for_time)
 {
-	if(data->interval <= 0)
+	if (data->interval <= 0)
 		return OTP_ERROR;
 	
 	return for_time/data->interval;
@@ -363,15 +375,18 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time)
 */
 int hotp_compare(OTPData* data, const char* key, uint64_t counter)
 {
+	if (key == NULL)
+		return OTP_ERROR;
+	
 	char cnt_str[data->digits+1];
 	memset(cnt_str, 0, data->digits+1);
 	
-	if(hotp_at(data, counter, cnt_str) == 0)
+	if (hotp_at(data, counter, cnt_str) == 0)
 		return OTP_ERROR;
 	
 	for (size_t i=0; i<data->digits; i++)
 	{
-		if(key[i] != cnt_str[i])
+		if (key[i] != cnt_str[i])
 			return OTP_ERROR;
 	}
 	
@@ -419,9 +434,9 @@ int hotp_next(OTPData* data, char* out_str)
 */
 COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 {
-	// char* byte_string = calloc(8+1, sizeof(char));
-	// char* byte_secret = calloc((strlen(data->base32_secret)/8)*5 + 1, sizeof(char));
-	// char* hmac = calloc(64+1, sizeof(char));
+	if (out_str == NULL)
+		return OTP_ERROR;
+	
 	char byte_string[8+1];
 	memset(byte_string, 0, 8+1);
 	
@@ -432,7 +447,7 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	char hmac[64+1];
 	memset(hmac, 0, 64+1);
 	
-	if(otp_num_to_bytestring(input, byte_string) == 0
+	if (otp_num_to_bytestring(input, byte_string) == 0
 			|| otp_byte_secret(data, byte_secret) == 0)
 		return OTP_ERROR;
 	
@@ -440,18 +455,17 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	if (hmac_len == 0)
 		return OTP_ERROR;
 	
-	uint64_t offset = (hmac[hmac_len-1] & 0xF);
+	uint64_t offset = (hmac[hmac_len - 1] & 0xF);
 	uint64_t code =
-		((hmac[offset] & 0x7F) << 24 |
-		(hmac[offset+1] & 0xFF) << 16 |
-		(hmac[offset+2] & 0xFF) << 8 |
-		(hmac[offset+3] & 0xFF));
-	code %= (uint64_t) pow(10, data->digits);
+		(((hmac[offset] & 0x7F) << 24)
+		| ((hmac[offset+1] & 0xFF) << 16)
+		| ((hmac[offset+2] & 0xFF) << 8)
+		| ((hmac[offset+3] & 0xFF)));
 	
-	if(out_str != NULL)
-	{
-		sprintf(out_str, "%0*zu", data->digits, code);
-	}
+	static const uint64_t POWERS[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
+	code %= (uint64_t) POWERS[data->digits];
+	
+	sprintf(out_str, "%0*zu", data->digits, code);
 	
 	return OTP_OK;
 }

@@ -85,7 +85,7 @@ uint64_t get_current_time()
 	auto now = system_clock::now();
 	auto dur = now.time_since_epoch();
 	
-	return duration_cast<chrono::milliseconds>(dur).count();
+	return duration_cast<chrono::seconds>(dur).count();
 }
 
 
