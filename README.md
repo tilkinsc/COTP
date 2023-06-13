@@ -1,4 +1,5 @@
 # COTP
+[![C/C++ CI](https://github.com/tilkinsc/COTP/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/tilkinsc/COTP/actions/workflows/c-cpp.yml)
 
 This module is part of a chain of OTP libraries all written in different languages. See https://github.com/OTPLibraries
 
