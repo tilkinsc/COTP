@@ -187,10 +187,6 @@ int main(int argc, char** argv)
 	// BASE32 Stuff                                               //
 	////////////////////////////////////////////////////////////////
 	
-	// Seed random generator
-	// TODO: use a secure random generator
-	srand(get_current_time());
-	
 	const int base32_len = 16; // must be % 8 == 0
 	
 	// Generate random base32
@@ -198,7 +194,6 @@ int main(int argc, char** argv)
 	memset(&base32_new_secret, 0, base32_len + 1);
 	
 	OTP::random_base32(base32_len, base32_new_secret);
-	base32_new_secret[base32_len] = '\0';
 	cout << "Random Generated BASE32 Secret: `" << base32_new_secret << "`" << endl;
 	
 	cout << endl; // line break for readability
