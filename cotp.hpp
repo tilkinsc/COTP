@@ -60,14 +60,9 @@ namespace COTP
 				return data;
 			}
 			
-			static COTPRESULT random_base32(size_t len, const char* chars, char* out_str)
+			static COTPRESULT random_base32(size_t len, char* out_str)
 			{
-				return otp_random_base32(len, chars, out_str);
-			}
-			
-			static const char* default_chars()
-			{
-				return OTP_DEFAULT_BASE32_CHARS;
+				return otp_random_base32(len, out_str);
 			}
 			
 	};
@@ -128,14 +123,9 @@ namespace COTP
 				return data;
 			}
 			
-			static COTPRESULT random_base32(size_t len, const char* chars, char* out_str)
+			static COTPRESULT random_base32(size_t len, char* out_str)
 			{
-				return otp_random_base32(len, chars, out_str);
-			}
-			
-			static const char* default_chars()
-			{
-				return OTP_DEFAULT_BASE32_CHARS;
+				return otp_random_base32(len, out_str);
 			}
 			
 	};
@@ -186,14 +176,9 @@ namespace COTP
 				return data;
 			}
 			
-			static COTPRESULT random_base32(size_t len, const char* chars, char* out_str)
+			static COTPRESULT random_base32(size_t len, char* out_str)
 			{
-				return otp_random_base32(len, chars, out_str);
-			}
-			
-			static const char* default_chars()
-			{
-				return OTP_DEFAULT_BASE32_CHARS;
+				return otp_random_base32(len, out_str);
 			}
 			
 	};

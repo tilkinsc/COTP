@@ -136,8 +136,6 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 	if (output_length == 0)
 		return OTP_OK;
 	
-	static const char* base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-	
 	for (size_t i = 0; i < num_blocks; i++)
 	{
 		unsigned int block_values[8] = { 0 };
@@ -149,7 +147,7 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 			
 			for (int k = 0; k < 32; k++)
 			{
-				if (c == base32_chars[k])
+				if (c == OTP_DEFAULT_BASE32_CHARS[k])
 				{
 					block_values[j] = k;
 					found = 1;
@@ -212,9 +210,9 @@ COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str)
 		error, 0
 
 */
-COTPRESULT otp_random_base32(size_t len, const char* chars, char* out_str)
+COTPRESULT otp_random_base32(size_t len, char* out_str)
 {
-	if (chars == NULL || out_str == NULL)
+	if (out_str == NULL)
 		return OTP_ERROR;
 	
 	len = len > 0 ? len : 16;
@@ -225,7 +223,7 @@ COTPRESULT otp_random_base32(size_t len, const char* chars, char* out_str)
 	
 	for (size_t i=0; i<len; i++)
 	{
-		out_str[i] = chars[rand_buffer[i] % 32];
+		out_str[i] = OTP_DEFAULT_BASE32_CHARS[rand_buffer[i] % 32];
 	}
 	
 	return OTP_OK;

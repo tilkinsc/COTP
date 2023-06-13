@@ -197,7 +197,7 @@ int main(int argc, char** argv)
 	char base32_new_secret[base32_len + 1];
 	memset(&base32_new_secret, 0, base32_len + 1);
 	
-	OTP::random_base32(base32_len, OTP::default_chars(), base32_new_secret);
+	OTP::random_base32(base32_len, base32_new_secret);
 	base32_new_secret[base32_len] = '\0';
 	cout << "Random Generated BASE32 Secret: `" << base32_new_secret << "`" << endl;
 	

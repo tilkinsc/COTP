@@ -93,7 +93,7 @@ void otp_free(OTPData* data);
 COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str);
 COTPRESULT otp_byte_secret(OTPData* data, char* out_str);
 COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str);
-COTPRESULT otp_random_base32(size_t len, const char* chars, char* out_str);
+COTPRESULT otp_random_base32(size_t len, char* out_str);
 
 
 /*

@@ -205,7 +205,7 @@ int main(int argc, char** argv)
 	char base32_new_secret[base32_len + 1];
 	memset(&base32_new_secret, 0, base32_len + 1);
 	
-	otp_random_base32(base32_len, OTP_DEFAULT_BASE32_CHARS, base32_new_secret);
+	otp_random_base32(base32_len, base32_new_secret);
 	base32_new_secret[base32_len] = '\0';
 	printf("Random Generated BASE32 Secret: `%s`\n", base32_new_secret);
 	
