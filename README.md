@@ -25,7 +25,7 @@ This library allows you to create a function in a specified format to communicat
 
 1. Create OTPData with the required information using *otp_new().
 2. Create a COTP_ALGO function which SHA1/256/512's then HMAC's its input and returns 0 for error or the result length
-3. Create a COTP_TIME function which returns a uint64_t that is the current time. Seconds or (recommended) milliseconds.
+3. Create a COTP_TIME function which returns a uint64_t that is the current time in seconds.
 4. Invoke the functions you need and pass your OTPData structure pointer.
 
 _____________
