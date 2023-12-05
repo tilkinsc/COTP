@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 
 /*
@@ -131,7 +132,7 @@ COTPRESULT otpuri_build_uri(OTPData* data, const char* issuer, const char* name,
 	strcat(output, "&digits=");
 	char cdigits[21];
 	memset(cdigits, 0, 21);
-	snprintf(cdigits, 21, "%Iu", data->digits);
+	snprintf(cdigits, 21, "%" PRIu32, data->digits);
 	strcat(output, cdigits);
 	
 	switch(data->method)
@@ -140,14 +141,14 @@ COTPRESULT otpuri_build_uri(OTPData* data, const char* issuer, const char* name,
 			strcat(output, "&period=");
 			char cperiod[21];
 			memset(cperiod, 0, 21);
-			snprintf(cperiod, 21, "%Iu", data->interval);
+			snprintf(cperiod, 21, "%" PRIu32, data->interval);
 			strcat(output, cperiod);
 			break;
 		case HOTP:
 			strcat(output, "&counter=");
 			char ccounter[21];
 			memset(ccounter, 0, 21);
-			snprintf(ccounter, 21, "%zu", data->count);
+			snprintf(ccounter, 21, "%" PRIu64, data->count);
 			strcat(output, ccounter);
 			break;
 		default:

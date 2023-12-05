@@ -463,7 +463,7 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	static const uint64_t POWERS[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
 	code %= (uint64_t) POWERS[data->digits];
 	
-	sprintf(out_str, "%0*zu", data->digits, code);
+	sprintf(out_str, "%0*" PRIu64, data->digits, code);
 	
 	return OTP_OK;
 }
