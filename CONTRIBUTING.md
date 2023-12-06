@@ -2,7 +2,7 @@
 # How to contribute
 
 1. PRs should target a development branch to be merged into master
-2. Its best if you create your PR with the following text,
+2. It's best if you create your PR with the following text,
 ```
 Problem: So and so
 
