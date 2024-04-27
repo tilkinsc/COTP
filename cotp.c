@@ -135,16 +135,16 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 	
 	if (output_length == 0)
 		return OTP_OK;
-
+	
 	for (size_t i = 0; i < num_blocks; i++)
 	{
 		unsigned int block_values[8] = { 0 };
-
+		
 		for (int j = 0; j < 8; j++)
 		{
 			char c = data->base32_secret[i * 8 + j];
 			int found = 0;
-
+			
 			if (c != '=')
 			{
 				for (int k = 0; k < 32; k++)
@@ -156,7 +156,7 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 						break;
 					}
 				}
-
+				
 				if (!found)
 				{
 					return OTP_ERROR;
@@ -470,3 +470,4 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	
 	return OTP_OK;
 }
+
