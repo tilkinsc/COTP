@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP"; // JBSWY3DPEHPK3PXP 3E56263A4A655ED7
 	
 	// Base32 secret to utilize with padding
-	const char BASE32_SECRET_PADDING[] = "ORSXG5BRGIZQ====";
+	const char BASE32_SECRET_PADDING[] = "ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====";
 	
 	OTPData odata1;
 	memset(&odata1, 0, sizeof(OTPData));
@@ -314,11 +314,11 @@ int main(int argc, char** argv)
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, this code is for a timeblock far into the past/future
-	int tv3 = totp_verify(tdata_padding, "766619", get_current_time(), 4);
+	int tv3 = totp_verify(tdata_padding, "122924", get_current_time(), 4);
 	printf("TOTP Verification 1 (padding) pass=false: `%s`\n", tv3 == 0 ? "false" : "true");
 	
-	// Will succeed, timeblock 0 for ORSXG5BRGIZQ==== == 709458
-	int tv4 = totp_verify(tdata_padding, "709458", 0, 4);
+	// Will succeed, timeblock 0 for 'ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====' == 758297
+	int tv4 = totp_verify(tdata_padding, "758297", 0, 4);
 	printf("TOTP Verification 2 (padding) pass=true: `%s`\n", tv4 == 0 ? "false" : "true");
 	
 	puts(""); // line break for readability
