@@ -103,8 +103,14 @@ int main(int argc, char** argv)
 	// Base32 secret to utilize
 	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP";
 	
+	// Base32 secret to utilize with padding
+	const char BASE32_SECRET_PADDING[] = "ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====";
+	
 	OTPData odata1;
 	memset(&odata1, 0, sizeof(OTPData));
+	
+	OTPData odata_padding;
+	memset(&odata_padding, 0, sizeof(OTPData));
 	
 	OTPData odata2;
 	memset(&odata2, 0, sizeof(OTPData));
@@ -119,7 +125,17 @@ int main(int argc, char** argv)
 		DIGITS,
 		INTERVAL
 	};
-		
+	
+	class TOTP tdata_padding
+	{
+		&odata_padding,
+		BASE32_SECRET_PADDING,
+		hmac_algo_sha1,
+		get_current_time,
+		DIGITS,
+		INTERVAL
+	};
+	
 	class HOTP hdata
 	{
 		&odata2,
@@ -139,6 +155,18 @@ int main(int argc, char** argv)
 	cout << "tdata->time: `"			<< reinterpret_cast<void*>(tdata_s->time) << "`" << endl;
 	cout << "tdata->base32_secret: `"	<< tdata_s->base32_secret	<< "`" << endl;
 	cout << "// totp tdata //"			<< endl						<< endl;
+	
+	// Dump data members of struct OTPData tdata_padding
+	OTPData* tdata_padding_s = tdata.data_struct();
+	cout << "\\\\ totp tdata_padding \\\\"		<< endl;
+	cout << "tdata_padding->digits: `"			<< tdata_padding_s->digits			<< "`" << endl;
+	cout << "tdata_padding->interval: `"		<< tdata_padding_s->interval		<< "`" << endl;
+	cout << "tdata_padding->method: `"			<< tdata_padding_s->method			<< "`" << endl;
+	cout << "tdata_padding->algo: `"			<< reinterpret_cast<void*>(tdata_padding_s->algo) << "`" << endl;
+	cout << "tdata_padding->time: `"			<< reinterpret_cast<void*>(tdata_padding_s->time) << "`" << endl;
+	cout << "tdata_padding->base32_secret: `"	<< tdata_padding_s->base32_secret	<< "`" << endl;
+	cout << "// totp tdata_padding //"			<< endl								<< endl;
+	
 	
 	// Dump data members of struct OTPData hdata
 	OTPData* hdata_s = hdata.data_struct();
@@ -216,10 +244,10 @@ int main(int argc, char** argv)
 	int totp_err_1 = tdata.now(tcode);
 	if(totp_err_1 == OTP_ERROR)
 	{
-		cout << "TOTP Error totp_now" << endl;
+		cout << "TOTP Error totp_now (padding)" << endl;
 		return EXIT_FAILURE;
 	}
-	cout << "totp_now() pass=1: `" << tcode << "` `" << totp_err_1 << "`" << endl;
+	cout << "totp_now() (padding) pass=1: `" << tcode << "` `" << totp_err_1 << "`" << endl;
 	
 	// totp_at
 	char tcode2[DIGITS+1];
@@ -228,19 +256,65 @@ int main(int argc, char** argv)
 	int totp_err_2 = tdata.at(0, 0, tcode2);
 	if(totp_err_2 == 0)
 	{
-		cout << "TOTP Error totp_at" << endl;
+		cout << "TOTP Error totp_at (padding)" << endl;
 		return EXIT_FAILURE;
 	}
-	cout << "totp_at(0, 0) pass=1: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
+	cout << "totp_at(0, 0) (padding) pass=1: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, this code is for a timeblock far into the past/future
 	int tv1 = tdata.verify("358892", get_current_time(), 4);
-	cout << "TOTP Verification 1 pass=false: `" << (tv1 == 0 ? "false" : "true") << "`" << endl;
+	cout << "TOTP Verification 1 (padding) pass=false: `" << (tv1 == 0 ? "false" : "true") << "`" << endl;
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
 	int tv2 = tdata.verify("282760", 0, 4);
-	cout << "TOTP Verification 2 pass=true: `" << (tv2 == 0 ? "false" : "true") << "`" << endl;
+	cout << "TOTP Verification 2 (padding) pass=true: `" << (tv2 == 0 ? "false" : "true") << "`" << endl;
+	
+	cout << endl; // line break for readability
+	
+	
+	
+	////////////////////////////////////////////////////////////////
+	// TOTP Stuff (Padding)                                       //
+	////////////////////////////////////////////////////////////////
+	
+	// Get TOTP for a timeblock
+	//   1. Reserve memory and ensure it's null-terminated
+	//   2. Generate and load totp key into buffer
+	//   3. Check for error
+	
+	// totp_now
+	char tcode3[DIGITS+1];
+	memset(tcode3, 0, DIGITS+1);
+	
+	int totp_err_3 = tdata_padding.now(tcode3);
+	if(totp_err_3 == OTP_ERROR)
+	{
+		cout << "TOTP Error totp_now" << endl;
+		return EXIT_FAILURE;
+	}
+	cout << "totp_now() pass=1: `" << tcode3 << "` `" << totp_err_3 << "`" << endl;
+	
+	// totp_at
+	char tcode4[DIGITS+1];
+	memset(tcode4, 0, DIGITS+1);
+	
+	int totp_err_4 = tdata_padding.at(0, 0, tcode4);
+	if(totp_err_4 == 0)
+	{
+		cout << "TOTP Error totp_at" << endl;
+		return EXIT_FAILURE;
+	}
+	cout << "totp_at(0, 0) pass=1: `" << tcode4 << "` `" << totp_err_4 << "`" << endl;
+	
+	// Do a verification for a hardcoded code
+	// Won't succeed, this code is for a timeblock far into the past/future
+	int tv3 = tdata_padding.verify("358892", get_current_time(), 4);
+	cout << "TOTP Verification 1 pass=false: `" << (tv3 == 0 ? "false" : "true") << "`" << endl;
+	
+	// Will succeed, timeblock 0 for 'ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====' == 570783
+	int tv4 = tdata_padding.verify("570783", 0, 4);
+	cout << "TOTP Verification 2 pass=true: `" << (tv4 == 0 ? "false" : "true") << "`" << endl;
 	
 	cout << endl; // line break for readability
 	

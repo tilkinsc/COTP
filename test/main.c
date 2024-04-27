@@ -32,11 +32,11 @@ int hmac_algo_sha1(const char* byte_secret, int key_length, const char* byte_str
 	unsigned int len = SHA1_BYTES;
 	
 	unsigned char* result = HMAC(
-		EVP_sha1(),							// algorithm
+		EVP_sha1(),									// algorithm
 		(unsigned char*)byte_secret, key_length,	// key
-		(unsigned char*)byte_string, 8,		// data
-		(unsigned char*)out,				// output
-		&len								// output length
+		(unsigned char*)byte_string, 8,				// data
+		(unsigned char*)out,						// output
+		&len										// output length
 	);
 	
 	// Return the HMAC success
@@ -49,11 +49,11 @@ int hmac_algo_sha256(const char* byte_secret, int key_length, const char* byte_s
 	unsigned int len = SHA256_BYTES;
 	
 	unsigned char* result = HMAC(
-		EVP_sha256(),						// algorithm
+		EVP_sha256(),								// algorithm
 		(unsigned char*)byte_secret, key_length,	// key
-		(unsigned char*)byte_string, 8,		// data
-		(unsigned char*)out,				// output
-		&len								// output length
+		(unsigned char*)byte_string, 8,				// data
+		(unsigned char*)out,						// output
+		&len										// output length
 	);
 	
 	// Return the HMAC success
@@ -66,11 +66,11 @@ int hmac_algo_sha512(const char* byte_secret, int key_length, const char* byte_s
 	unsigned int len = SHA512_BYTES;
 	
 	unsigned char* result = HMAC(
-		EVP_sha512(),						// algorithm
+		EVP_sha512(),								// algorithm
 		(unsigned char*)byte_secret, key_length,	// key
-		(unsigned char*)byte_string, 8,		// data
-		(unsigned char*)out,				// output
-		&len								// output length
+		(unsigned char*)byte_string, 8,				// data
+		(unsigned char*)out,						// output
+		&len										// output length
 	);
 	
 	// Return the HMAC success
@@ -140,7 +140,7 @@ int main(int argc, char** argv)
 	OTPData* tdata_padding = totp_new(
 		&odata_padding,
 		BASE32_SECRET_PADDING,
-		hmac_algo_sha256,
+		hmac_algo_sha1,
 		get_current_time,
 		DIGITS,
 		INTERVAL
@@ -317,8 +317,8 @@ int main(int argc, char** argv)
 	int tv3 = totp_verify(tdata_padding, "122924", get_current_time(), 4);
 	printf("TOTP Verification 1 (padding) pass=false: `%s`\n", tv3 == 0 ? "false" : "true");
 	
-	// Will succeed, timeblock 0 for 'ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====' == 758297
-	int tv4 = totp_verify(tdata_padding, "758297", 0, 4);
+	// Will succeed, timeblock 0 for 'ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====' == 570783
+	int tv4 = totp_verify(tdata_padding, "570783", 0, 4);
 	printf("TOTP Verification 2 (padding) pass=true: `%s`\n", tv4 == 0 ? "false" : "true");
 	
 	puts(""); // line break for readability
