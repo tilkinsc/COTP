@@ -66,11 +66,11 @@ typedef struct OTPData
 	uint32_t digits;
 	uint32_t interval; // TOTP exclusive
 	uint64_t count;
-
+	
 	OTPType method;
 	COTP_ALGO algo;
 	COTP_TIME time;
-
+	
 	const char* base32_secret;
 } OTPData;
 
