@@ -25,14 +25,14 @@ static const int32_t SHA512_BYTES = 512 / 8;	// 64
 // byte_secret is unbase32 key
 // byte_string is data to be HMAC'd
 // returns 0 for failure otherwise the length of the string
-int hmac_algo_sha1(const char* byte_secret, const char* byte_string, char* out)
+int hmac_algo_sha1(const char* byte_secret, int key_length, const char* byte_string, char* out)
 {
 	// Output len
 	unsigned int len = SHA1_BYTES;
 	
 	unsigned char* result = HMAC(
 		EVP_sha1(),							// algorithm
-		(unsigned char*)byte_secret, 10,	// key
+		(unsigned char*)byte_secret, key_length,	// key
 		(unsigned char*)byte_string, 8,		// data
 		(unsigned char*)out,				// output
 		&len								// output length
@@ -43,14 +43,14 @@ int hmac_algo_sha1(const char* byte_secret, const char* byte_string, char* out)
 }
 
 
-int hmac_algo_sha256(const char* byte_secret, const char* byte_string, char* out)
+int hmac_algo_sha256(const char* byte_secret, int key_length, const char* byte_string, char* out)
 {
 	// Output len
 	unsigned int len = SHA256_BYTES;
 	
 	unsigned char* result = HMAC(
 		EVP_sha256(),						// algorithm
-		(unsigned char*)byte_secret, 10,	// key
+		(unsigned char*)byte_secret, key_length,	// key
 		(unsigned char*)byte_string, 8,		// data
 		(unsigned char*)out,				// output
 		&len								// output length
@@ -60,14 +60,14 @@ int hmac_algo_sha256(const char* byte_secret, const char* byte_string, char* out
 	return result == 0 ? 0 : len;
 }
 
-int hmac_algo_sha512(const char* byte_secret, const char* byte_string, char* out)
+int hmac_algo_sha512(const char* byte_secret, int key_length, const char* byte_string, char* out)
 {
 	// Output len
 	unsigned int len = SHA512_BYTES;
 	
 	unsigned char* result = HMAC(
 		EVP_sha512(),						// algorithm
-		(unsigned char*)byte_secret, 10,	// key
+		(unsigned char*)byte_secret, key_length,	// key
 		(unsigned char*)byte_string, 8,		// data
 		(unsigned char*)out,				// output
 		&len								// output length
