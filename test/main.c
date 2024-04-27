@@ -317,7 +317,7 @@ int main(int argc, char** argv)
 	int tv3 = totp_verify(tdata_padding, "766619", get_current_time(), 4);
 	printf("TOTP Verification 1 (padding) pass=false: `%s`\n", tv3 == 0 ? "false" : "true");
 	
-	// Will succeed, timeblock 0 for ORSXG5BRGIZQ==== == 282760
+	// Will succeed, timeblock 0 for ORSXG5BRGIZQ==== == 709458
 	int tv4 = totp_verify(tdata_padding, "709458", 0, 4);
 	printf("TOTP Verification 2 (padding) pass=true: `%s`\n", tv4 == 0 ? "false" : "true");
 	
