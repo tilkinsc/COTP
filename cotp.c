@@ -143,8 +143,10 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str)
 		for (int j = 0; j < 8; j++)
 		{
 			char c = data->base32_secret[i * 8 + j];
+			if (c == '=')
+				break;
+				
 			int found = 0;
-			
 			for (int k = 0; k < 32; k++)
 			{
 				if (c == OTP_DEFAULT_BASE32_CHARS[k])
@@ -438,9 +440,9 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	char byte_string[8+1];
 	memset(byte_string, 0, 8+1);
 	
-	size_t bs_len = (strlen(data->base32_secret)/8)*5 + 1;
-	char byte_secret[bs_len];
-	memset(byte_secret, 0, bs_len);
+	size_t bs_len = (strlen(data->base32_secret)/8)*5;
+	char byte_secret[bs_len + 1];
+	memset(byte_secret, 0, bs_len + 1);
 	
 	char hmac[64+1];
 	memset(hmac, 0, 64+1);
@@ -449,7 +451,7 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 			|| otp_byte_secret(data, byte_secret) == 0)
 		return OTP_ERROR;
 	
-	int hmac_len = (*(data->algo))(byte_secret, byte_string, hmac);
+	int hmac_len = (*(data->algo))(byte_secret, bs_len, byte_string, hmac);
 	if (hmac_len == 0)
 		return OTP_ERROR;
 	

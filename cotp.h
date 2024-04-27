@@ -47,7 +47,7 @@ const char* OTPType_asString(OTPType type);
 	
 	Must return 0 if error, or the length in bytes of the HMAC operation.
 */
-typedef int (*COTP_ALGO)(const char* key, const char* input, char* output);
+typedef int (*COTP_ALGO)(const char* key, int key_length, const char* input, char* output);
 
 /*
 	Must return the current time in seconds.
@@ -113,4 +113,3 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time);
 COTPRESULT hotp_compare(OTPData* data, const char* key, uint64_t counter);
 COTPRESULT hotp_at(OTPData* data, uint64_t counter, char* out_str);
 COTPRESULT hotp_next(OTPData* data, char* out_str);
-
