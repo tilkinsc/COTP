@@ -115,8 +115,14 @@ int main(int argc, char** argv)
 	// Base32 secret to utilize
 	const char BASE32_SECRET[] = "JBSWY3DPEHPK3PXP"; // JBSWY3DPEHPK3PXP 3E56263A4A655ED7
 	
+	// Base32 secret to utilize with padding
+	const char BASE32_SECRET_PADDING[] = "ORSXG5BRGIZQ====";
+	
 	OTPData odata1;
 	memset(&odata1, 0, sizeof(OTPData));
+	
+	OTPData odata_padding;
+	memset(&odata_padding, 0, sizeof(OTPData));
 	
 	OTPData odata2;
 	memset(&odata2, 0, sizeof(OTPData));
@@ -126,6 +132,15 @@ int main(int argc, char** argv)
 		&odata1,
 		BASE32_SECRET,
 		hmac_algo_sha1,
+		get_current_time,
+		DIGITS,
+		INTERVAL
+	);
+	
+	OTPData* tdata_padding = totp_new(
+		&odata_padding,
+		BASE32_SECRET_PADDING,
+		hmac_algo_sha256,
 		get_current_time,
 		DIGITS,
 		INTERVAL
@@ -148,6 +163,16 @@ int main(int argc, char** argv)
 	printf("tdata->time: `0x%p`\n", tdata->time);
 	printf("tdata->base32_secret: `%s`\n", tdata->base32_secret);
 	printf("// totp tdata //\n\n");
+	
+	// Dump data members of struct OTPData tdata_padding
+	printf("\\\\ totp tdata_padding \\\\\n");
+	printf("tdata_padding->digits: `%u`\n", tdata_padding->digits);
+	printf("tdata_padding->interval: `%u`\n", tdata_padding->interval);
+	printf("tdata_padding->method: `%u`\n", tdata_padding->method);
+	printf("tdata_padding->algo: `0x%p`\n", tdata_padding->algo);
+	printf("tdata_padding->time: `0x%p`\n", tdata_padding->time);
+	printf("tdata_padding->base32_secret: `%s`\n", tdata_padding->base32_secret);
+	printf("// totp tdata_padding //\n\n");
 	
 	// Dump data members of struct OTPData hdata
 	printf("\\\\ hotp hdata \\\\\n");
@@ -249,6 +274,52 @@ int main(int argc, char** argv)
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
 	int tv2 = totp_verify(tdata, "282760", 0, 4);
 	printf("TOTP Verification 2 pass=true: `%s`\n", tv2 == 0 ? "false" : "true");
+	
+	puts(""); // line break for readability
+	
+	
+	
+	////////////////////////////////////////////////////////////////
+	// TOTP Stuff (Padding)                                       //
+	////////////////////////////////////////////////////////////////
+	
+	// Get TOTP for a timeblock
+	//   1. Reserve memory and ensure it's null-terminated
+	//   2. Generate and load totp key into buffer
+	//   3. Check for error
+	
+	// totp_now
+	char tcode3[DIGITS+1];
+	memset(tcode3, 0, DIGITS+1);
+	
+	int totp_err_3 = totp_now(tdata_padding, tcode3);
+	if(totp_err_3 == OTP_ERROR)
+	{
+		fputs("TOTP Error totp_now (padding)", stderr);
+		return EXIT_FAILURE;
+	}
+	printf("totp_now() (padding) pass=1: `%s` `%d`\n", tcode3, totp_err_3);
+	
+	// totp_at
+	char tcode4[DIGITS+1];
+	memset(tcode4, 0, DIGITS+1);
+	
+	int totp_err_4 = totp_at(tdata_padding, 0, 0, tcode4);
+	if(totp_err_4 == OTP_ERROR)
+	{
+		fputs("TOTP Error totp_at (padding)", stderr);
+		return EXIT_FAILURE;
+	}
+	printf("totp_at(0, 0) (padding) pass=1: `%s` `%d`\n", tcode4, totp_err_4);
+	
+	// Do a verification for a hardcoded code
+	// Won't succeed, this code is for a timeblock far into the past/future
+	int tv3 = totp_verify(tdata_padding, "766619", get_current_time(), 4);
+	printf("TOTP Verification 1 (padding) pass=false: `%s`\n", tv3 == 0 ? "false" : "true");
+	
+	// Will succeed, timeblock 0 for ORSXG5BRGIZQ==== == 282760
+	int tv4 = totp_verify(tdata_padding, "709458", 0, 4);
+	printf("TOTP Verification 2 (padding) pass=true: `%s`\n", tv4 == 0 ? "false" : "true");
 	
 	puts(""); // line break for readability
 	
