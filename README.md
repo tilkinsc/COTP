@@ -39,5 +39,5 @@ This product includes software developed by the OpenSSL Project for use in the O
 
 ## TODO
 
-* SHA256 needs to be verified if its working fully
-* SHA512 needs to be verified if its working fully
+* SHA256 needs to be verified if it's working fully
+* SHA512 needs to be verified if it's working fully
