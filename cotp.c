@@ -277,8 +277,8 @@ COTPRESULT totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_s
 }
 
 /*
-	Generates a OTP key using the totp algorithm with
-	  the current, unsecure time in seconds.
+	Generates an OTP key using the totp algorithm with
+	  the current timestep.
 	
 	out_str is the null-terminated output string already allocated
 	
@@ -289,6 +289,21 @@ COTPRESULT totp_at(OTPData* data, uint64_t for_time, int64_t offset, char* out_s
 COTPRESULT totp_now(OTPData* data, char* out_str)
 {
 	return otp_generate(data, totp_timecode(data, data->time()), out_str);
+}
+
+/*
+	Generates an OTP key using the totp algorithm with
+	  the current timestep + 1.
+	
+	out_str is the null-terminated output string already allocated
+	
+	Returns
+			1 if otp key was successfully generated
+		error, 0
+*/
+COTPRESULT totp_next(OTPData* data, char* out_str)
+{
+	return otp_generate(data, totp_timecode(data, data->time()) + 1, out_str);
 }
 
 /*
@@ -355,7 +370,7 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time)
 	if (data->interval <= 0)
 		return OTP_ERROR;
 	
-	return for_time/data->interval;
+	return for_time / data->interval;
 }
 
 
