@@ -40,11 +40,6 @@ namespace COTP
 				return otp_byte_secret(data, out_str);
 			}
 			
-			COTPRESULT num_to_bytestring(uint64_t integer, char* out_str)
-			{
-				return otp_num_to_bytestring(integer, out_str);
-			}
-			
 			size_t uri_strlen(const char* issuer, const char* name, const char* digest)
 			{
 				return otpuri_strlen(data, issuer, name, digest);
@@ -58,6 +53,11 @@ namespace COTP
 			OTPData* data_struct()
 			{
 				return data;
+			}
+			
+			static COTPRESULT num_to_bytestring(uint64_t integer, char* out_str)
+			{
+				return otp_num_to_bytestring(integer, out_str);
 			}
 			
 			static COTPRESULT random_base32(size_t len, char* out_str)
