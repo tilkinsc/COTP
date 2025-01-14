@@ -221,8 +221,8 @@ int main(int argc, char** argv)
 	char base32_new_secret[base32_len + 1];
 	memset(&base32_new_secret, 0, base32_len + 1);
 	
-	OTP::random_base32(base32_len, base32_new_secret);
-	cout << "Random Generated BASE32 Secret: `" << base32_new_secret << "`" << endl;
+	int random_otp_err = OTP::random_base32(base32_len, base32_new_secret);
+	cout << "Random Generated BASE32 Secret pass=1: `" << base32_new_secret << "` `" << random_otp_err << "`" << endl;
 	
 	cout << endl; // line break for readability
 	
