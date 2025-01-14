@@ -253,11 +253,14 @@ COTPRESULT totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t
 	if (totp_at(data, for_time, offset, time_str) == 0)
 		return OTP_ERROR;
 	
+	int wins = 0;
 	for (size_t i=0; i<data->digits; i++)
 	{
-		if (key[i] != time_str[i])
-			return OTP_ERROR;
+		if (key[i] == time_str[i])
+			wins++;
 	}
+	if (wins != data->digits)
+		return OTP_ERROR;
 	
 	return OTP_OK;
 }
@@ -327,13 +330,15 @@ COTPRESULT totp_verify(OTPData* data, const char* key, uint64_t for_time, int64_
 	
 	if (valid_window > 0)
 	{
+		int wins = 0;
 		for (int64_t i=-valid_window; i<valid_window+1; i++)
 		{
 			int cmp = totp_compare(data, key, i, for_time);
-			if (cmp == 1)
-				return cmp;
+			if (cmp == OTP_OK)
+				wins++;
 		}
-		return OTP_ERROR;
+		
+		return (COTPRESULT) wins >= 1;
 	}
 	
 	return totp_compare(data, key, 0, for_time);
@@ -399,13 +404,16 @@ int hotp_compare(OTPData* data, const char* key, uint64_t counter)
 	if (hotp_at(data, counter, cnt_str) == 0)
 		return OTP_ERROR;
 	
+	int wins = 0;
 	for (size_t i=0; i<data->digits; i++)
 	{
-		if (key[i] != cnt_str[i])
-			return OTP_ERROR;
+		if (key[i] == cnt_str[i])
+			wins++;
 	}
+	if (wins == data->digits)
+		return OTP_OK;
 	
-	return OTP_OK;
+	return OTP_ERROR;
 }
 
 /*
