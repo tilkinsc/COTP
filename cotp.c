@@ -242,7 +242,7 @@ COTPRESULT totp_compare(OTPData* data, const char* key, int64_t offset, uint64_t
 	int invalid = 0;
 	for (size_t i=0; i<data->digits; i++)
 	{
-		invalid |=  key[i] != time_str[i];
+		invalid |=  key[i] ^ time_str[i];
 	}
 	if (invalid != 0)
 		return OTP_ERROR;
@@ -392,7 +392,7 @@ int hotp_compare(OTPData* data, const char* key, uint64_t counter)
 	int invalid = 0;
 	for (size_t i=0; i<data->digits; i++)
 	{
-		invalid |=  key[i] != cnt_str[i];
+		invalid |=  key[i] ^ cnt_str[i];
 	}
 	if (invalid != 0)
 		return OTP_ERROR;
