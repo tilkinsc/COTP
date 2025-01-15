@@ -90,7 +90,7 @@ prog_test_cpp: libs $(test_cpp)
 $(sta_lib): $(c_objects)
 	$(cmd_ar) rcs -o $@ $^
 
-$(dyn_lib): $(c_dyn_objects)
+$(dyn_lib): $(c_objects)
 	$(c_compiler) $(c_ldflags) -o $@ $^ $(c_libs)
 
 $(test_c): $(c_test_sources) $(sta_lib)
