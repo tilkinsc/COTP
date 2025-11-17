@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 
@@ -102,6 +103,8 @@ int main(int argc, char** argv)
 	
 	// Base32 secret to utilize with padding
 	const char BASE32_SECRET_PADDING[] = "ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====";
+
+	bool success = true;
 	
 	OTPData odata1;
 	memset(&odata1, 0, sizeof(OTPData));
@@ -213,6 +216,7 @@ int main(int argc, char** argv)
 	
 	int random_otp_err = otp_random_base32(base32_len, base32_new_secret);
 	printf("Random Generated BASE32 Secret pass=1: `%s` `%d`\n", base32_new_secret, random_otp_err);
+	success = success && (random_otp_err == 1);
 	
 	puts(""); // line break for readability
 	
@@ -238,6 +242,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	printf("totp_now() pass=1: `%s` `%d`\n", tcode, totp_err_1);
+	success = success && (totp_err_1 == 1);
 	
 	// totp_at
 	char tcode2[DIGITS+1];
@@ -250,15 +255,18 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	printf("totp_at(0, 0) pass=1: `%s` `%d`\n", tcode2, totp_err_2);
+	success = success && (totp_err_2 == 1);
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, this code is for a timeblock far into the past/future
 	int tv1 = totp_verify(tdata, "358892", get_current_time(), 4);
 	printf("TOTP Verification 1 pass=false: `%s`\n", tv1 == 0 ? "false" : "true");
+	success = success && (tv1 == 0);
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
 	int tv2 = totp_verify(tdata, "282760", 0, 4);
 	printf("TOTP Verification 2 pass=true: `%s`\n", tv2 == 0 ? "false" : "true");
+	success = success && (tv2 != 0);
 	
 	puts(""); // line break for readability
 	
@@ -284,6 +292,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	printf("totp_now() (padding) pass=1: `%s` `%d`\n", tcode3, totp_err_3);
+	success = success && (totp_err_3 == 1);
 	
 	// totp_at
 	char tcode4[DIGITS+1];
@@ -296,15 +305,18 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	printf("totp_at(0, 0) (padding) pass=1: `%s` `%d`\n", tcode4, totp_err_4);
+	success = success && (totp_err_4 == 1);
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, this code is for a timeblock far into the past/future
 	int tv3 = totp_verify(tdata_padding, "122924", get_current_time(), 4);
 	printf("TOTP Verification 1 (padding) pass=false: `%s`\n", tv3 == 0 ? "false" : "true");
+	success = success && (tv3 == 0);
 	
 	// Will succeed, timeblock 0 for 'ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====' == 570783
 	int tv4 = totp_verify(tdata_padding, "570783", 0, 4);
 	printf("TOTP Verification 2 (padding) pass=true: `%s`\n", tv4 == 0 ? "false" : "true");
+	success = success && (tv4 != 0);
 	
 	puts(""); // line break for readability
 	
@@ -329,16 +341,19 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	printf("hotp_at(1) pass=1: `%s` `%d`\n", hcode, hotp_err_1);
+	success = success && (hotp_err_1 == 1);
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv1 = hotp_compare(hdata, "996555", 1);
 	printf("HOTP Verification 1 pass=false: `%s`\n", hv1 == 0 ? "false" : "true");
+	success = success && (hv1 == 0);
 	
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv2 = hotp_compare(hdata, "996554", 1);
 	printf("HOTP Verification 2 pass=true: `%s`\n", hv2 == 0 ? "false" : "true");
+	success = success && (hv2 != 0);
 	
-	return EXIT_SUCCESS;
+	return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 

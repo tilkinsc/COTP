@@ -105,6 +105,8 @@ int main(int argc, char** argv)
 	// Base32 secret to utilize with padding
 	const char BASE32_SECRET_PADDING[] = "ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====";
 	
+	bool success = true;
+	
 	OTPData odata1;
 	memset(&odata1, 0, sizeof(OTPData));
 	
@@ -222,6 +224,7 @@ int main(int argc, char** argv)
 	
 	int random_otp_err = OTP::random_base32(base32_len, base32_new_secret);
 	cout << "Random Generated BASE32 Secret pass=1: `" << base32_new_secret << "` `" << random_otp_err << "`" << endl;
+	success = success && (random_otp_err == 1);
 	
 	cout << endl; // line break for readability
 	
@@ -247,6 +250,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	cout << "totp_now() (padding) pass=1: `" << tcode << "` `" << totp_err_1 << "`" << endl;
+	success = success && (totp_err_1 == 1);
 	
 	// totp_at
 	char tcode2[DIGITS+1];
@@ -259,15 +263,18 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	cout << "totp_at(0, 0) (padding) pass=1: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
+	success = success && (totp_err_2 == 1);
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, this code is for a timeblock far into the past/future
 	int tv1 = tdata.verify("358892", get_current_time(), 4);
 	cout << "TOTP Verification 1 (padding) pass=false: `" << (tv1 == 0 ? "false" : "true") << "`" << endl;
+	success = success && (tv1 == 0);
 	
 	// Will succeed, timeblock 0 for JBSWY3DPEHPK3PXP == 282760
 	int tv2 = tdata.verify("282760", 0, 4);
 	cout << "TOTP Verification 2 (padding) pass=true: `" << (tv2 == 0 ? "false" : "true") << "`" << endl;
+	success = success && (tv2 != 0);
 	
 	cout << endl; // line break for readability
 	
@@ -293,6 +300,7 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	cout << "totp_now() pass=1: `" << tcode3 << "` `" << totp_err_3 << "`" << endl;
+	success = success && (totp_err_3 == 1);
 	
 	// totp_at
 	char tcode4[DIGITS+1];
@@ -305,15 +313,18 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	cout << "totp_at(0, 0) pass=1: `" << tcode4 << "` `" << totp_err_4 << "`" << endl;
+	success = success && (totp_err_4 == 1);
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, this code is for a timeblock far into the past/future
 	int tv3 = tdata_padding.verify("358892", get_current_time(), 4);
 	cout << "TOTP Verification 1 pass=false: `" << (tv3 == 0 ? "false" : "true") << "`" << endl;
+	success = success && (tv3 == 0);
 	
 	// Will succeed, timeblock 0 for 'ORSXG5BRGIZXIZLTOQ2DKNRXHA4XIZLTOQYQ====' == 570783
 	int tv4 = tdata_padding.verify("570783", 0, 4);
 	cout << "TOTP Verification 2 pass=true: `" << (tv4 == 0 ? "false" : "true") << "`" << endl;
+	success = success && (tv4 != 0);
 	
 	cout << endl; // line break for readability
 	
@@ -337,16 +348,19 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 	cout << "hotp_at(1) pass=1: `" << hcode << "`" << " `" << hotp_err_1 << "`" << endl;
+	success = success && (hotp_err_1 == 1);
 	
 	// Do a verification for a hardcoded code
 	// Won't succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv1 = hdata.compare("996555", 1);
 	cout << "HOTP Verification 1 pass=false: `" << (hv1 == 0 ? "false" : "true") << "`" << endl;
+	success = success && (hv1 == 0);
 	
 	// Will succeed, 1 for JBSWY3DPEHPK3PXP == 996554
 	int hv2 = hdata.compare("996554", 1);
 	cout << "HOTP Verification 2 pass=true: `" << (hv2 == 0 ? "false" : "true") << "`" << endl;
+	success = success && (hv2 != 0);
 	
-	return EXIT_SUCCESS;
+	return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
