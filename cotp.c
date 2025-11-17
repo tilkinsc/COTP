@@ -51,7 +51,7 @@ OTPData* otp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint3
 	data->algo = algo;
 	data->time = NULL;
 	
-	data->base32_secret = &base32_secret[0];
+	data->base32_secret = base32_secret;
 	
 	return data;
 }
@@ -454,8 +454,8 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	char hmac[64+1];
 	memset(hmac, 0, 64+1);
 	
-	if (otp_num_to_bytestring(input, byte_string) == 0
-			|| otp_byte_secret(data, byte_secret) == 0)
+	if (otp_num_to_bytestring(input, byte_string) != OTP_OK
+			|| otp_byte_secret(data, byte_secret) != OTP_OK)
 		return OTP_ERROR;
 	
 	int hmac_len = (*(data->algo))(byte_secret, bs_len, byte_string, hmac);
