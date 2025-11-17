@@ -459,10 +459,12 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 		return OTP_ERROR;
 	
 	int hmac_len = (*(data->algo))(byte_secret, bs_len, byte_string, hmac);
-	if (hmac_len == 0)
+	if (hmac_len < 1 || hmac_len > 64)
 		return OTP_ERROR;
 	
-	uint64_t offset = (hmac[hmac_len - 1] & 0xF);
+	size_t offset = (hmac[hmac_len - 1] & 0xF);
+	if (offset + 3 >= hmac_len)
+		return OTP_ERROR;
 	uint64_t code =
 		(((hmac[offset] & 0x7F) << 24)
 		| ((hmac[offset+1] & 0xFF) << 16)
