@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 // OTPRESULT can either be 1 (success) or 0 (error)
 typedef int COTPRESULT;
@@ -135,3 +138,7 @@ uint64_t totp_timecode(OTPData* data, uint64_t for_time);
 COTPRESULT hotp_compare(OTPData* data, const char* key, uint64_t counter);
 COTPRESULT hotp_at(OTPData* data, uint64_t counter, char* out_str);
 COTPRESULT hotp_next(OTPData* data, char* out_str);
+
+#if defined(__cplusplus)
+}
+#endif
