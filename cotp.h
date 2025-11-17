@@ -77,7 +77,7 @@ typedef int (*COTP_ALGO)(const char* key, int key_length, const char* input, cha
 /*
 	Must return the current time in seconds.
 */
-typedef uint64_t (*COTP_TIME)();
+typedef uint64_t (*COTP_TIME)(void);
 
 
 /*

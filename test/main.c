@@ -72,7 +72,7 @@ int hmac_algo_sha512(const char* byte_secret, int key_length, const char* byte_s
 	return result == 0 ? 0 : len;
 }
 
-static uint64_t get_current_time()
+static uint64_t get_current_time(void)
 {
 	uint64_t seconds;
 	
