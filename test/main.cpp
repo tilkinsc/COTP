@@ -77,7 +77,6 @@ int hmac_algo_sha512(const char* byte_secret, int key_length, const char* byte_s
 	return result == 0 ? 0 : len;
 }
 
-// TODO: use a secure random generator
 uint64_t get_current_time()
 {
 	using namespace std::chrono;
