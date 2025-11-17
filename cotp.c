@@ -140,20 +140,21 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str) {
 	int valid = 1;
 	
 	for (size_t i = 0; i < num_blocks; i++) {
-		unsigned int block_values[8] = { 0 };
+		uint64_t block_value = 0;
 		
 		for (int j = 0; j < 8; j++) {
+			block_value <<= 5;
 			char c = data->base32_secret[i * 8 + j];
 			unsigned int value = (unsigned char) c < 256 ? OTP_DEFAULT_BASE32_OFFSETS[(unsigned char) c] : -1;
-			block_values[j] = value & 31;
+			block_value |= value & 31;
 			valid &= (value >= 0);
 		}
 		
-		out_str[i * 5] = (block_values[0] << 3) | (block_values[1] >> 2);
-		out_str[i * 5 + 1] = (block_values[1] << 6) | (block_values[2] << 1) | (block_values[3] >> 4);
-		out_str[i * 5 + 2] = (block_values[3] << 4) | (block_values[4] >> 1);
-		out_str[i * 5 + 3] = (block_values[4] << 7) | (block_values[5] << 2) | (block_values[6] >> 3);
-		out_str[i * 5 + 4] = (block_values[6] << 5) | block_values[7];
+		out_str[i * 5 + 0] = block_value >> 32;
+		out_str[i * 5 + 1] = block_value >> 24;
+		out_str[i * 5 + 2] = block_value >> 16;
+		out_str[i * 5 + 3] = block_value >>  8;
+		out_str[i * 5 + 4] = block_value >>  0;
 	}
 
 	return valid ? OTP_OK : OTP_ERROR;
