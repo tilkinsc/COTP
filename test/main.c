@@ -1,15 +1,10 @@
+#define _TIME_BITS 64
+#define _FILE_OFFSET_BITS 64
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-#if defined(_WIN32)
-#	include <sysinfoapi.h>
-#elif defined(__linux__)
-#	include <sys/time.h>
-#else
-#	error "OS not supported."
-#endif
+#include <time.h>
 
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -77,27 +72,17 @@ int hmac_algo_sha512(const char* byte_secret, int key_length, const char* byte_s
 	return result == 0 ? 0 : len;
 }
 
-uint64_t get_current_time()
+static uint64_t get_current_time()
 {
-	uint64_t milliseconds = 0;
+	uint64_t seconds;
 	
 #if defined(_WIN32)
-	FILETIME fileTime;
-	GetSystemTimeAsFileTime(&fileTime);
-	
-	ULARGE_INTEGER largeInteger;
-	largeInteger.LowPart = fileTime.dwLowDateTime;
-	largeInteger.HighPart = fileTime.dwHighDateTime;
-	
-	milliseconds = (largeInteger.QuadPart - 116444736000000000ULL) / 10000000ULL;
-#elif defined(__linux__)
-	struct timeval sys_time;
-	gettimeofday(&sys_time, NULL);
-	
-	milliseconds = sys_time.tv_sec;
+	seconds = _time64(NULL);
+#else
+	seconds = time(NULL);
 #endif
 	
-	return milliseconds;
+	return seconds;
 }
 
 
