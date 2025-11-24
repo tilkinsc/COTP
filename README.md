@@ -16,7 +16,7 @@ For linux users, you will want to install libcrypto via `sudo apt install libssl
 
 This library works with C++, but is targeted at C. I made a .hpp header that wraps the C functions, which I find gross. Feel free to clean it up and do a pull request. I do, however, have to recommend you use the .hpp header due to namespace flooding.
 
-See the [build.bat](build.bat) or [build.sh](build.sh) file for self-building guidance. If you don't want to use the .hpp C++ wrapper, you can `extern "C" #include "cotp.h"` which will flood your global space with the header file contents. We have a [Makefile](Makefile) for use: `make libs` for just the library or `make all` to also build the test examples.
+See the [build.bat](build.bat) or [build.sh](build.sh) file for self-building guidance. If you don't want to use the .hpp C++ wrapper, you can `#include "cotp.h"` which will flood your global space with the header file contents. We have a [Makefile](Makefile) for use: `make libs` for just the library or `make all` to also build the test examples.
 
 
 ## Usage

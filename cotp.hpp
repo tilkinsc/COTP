@@ -3,11 +3,8 @@
 
 #if defined(__cplusplus)
 
-extern "C"
-{
-	#include "cotp.h"
-	#include "otpuri.h"
-}
+#include "cotp.h"
+#include "otpuri.h"
 
 #include <cstdint>
 

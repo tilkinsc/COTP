@@ -63,7 +63,7 @@ test_cpp = test_cpp$(project_ext)
 
 ###############################################################################
 
-.PHONY: all clean libs tests static dynamic test_c test_cpp
+.PHONY: all clean libs tests static dynamic
 
 all: libs tests
 

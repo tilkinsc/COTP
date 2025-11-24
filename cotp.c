@@ -51,7 +51,7 @@ OTPData* otp_new(OTPData* data, const char* base32_secret, COTP_ALGO algo, uint3
 	data->algo = algo;
 	data->time = NULL;
 	
-	data->base32_secret = &base32_secret[0];
+	data->base32_secret = base32_secret;
 	
 	return data;
 }
@@ -140,20 +140,21 @@ COTPRESULT otp_byte_secret(OTPData* data, char* out_str) {
 	int valid = 1;
 	
 	for (size_t i = 0; i < num_blocks; i++) {
-		unsigned int block_values[8] = { 0 };
+		uint64_t block_value = 0;
 		
 		for (int j = 0; j < 8; j++) {
+			block_value <<= 5;
 			char c = data->base32_secret[i * 8 + j];
 			unsigned int value = (unsigned char) c < 256 ? OTP_DEFAULT_BASE32_OFFSETS[(unsigned char) c] : -1;
-			block_values[j] = value & 31;
+			block_value |= value & 31;
 			valid &= (value >= 0);
 		}
 		
-		out_str[i * 5] = (block_values[0] << 3) | (block_values[1] >> 2);
-		out_str[i * 5 + 1] = (block_values[1] << 6) | (block_values[2] << 1) | (block_values[3] >> 4);
-		out_str[i * 5 + 2] = (block_values[3] << 4) | (block_values[4] >> 1);
-		out_str[i * 5 + 3] = (block_values[4] << 7) | (block_values[5] << 2) | (block_values[6] >> 3);
-		out_str[i * 5 + 4] = (block_values[6] << 5) | block_values[7];
+		out_str[i * 5 + 0] = block_value >> 32;
+		out_str[i * 5 + 1] = block_value >> 24;
+		out_str[i * 5 + 2] = block_value >> 16;
+		out_str[i * 5 + 3] = block_value >>  8;
+		out_str[i * 5 + 4] = block_value >>  0;
 	}
 
 	return valid ? OTP_OK : OTP_ERROR;
@@ -454,15 +455,17 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	char hmac[64+1];
 	memset(hmac, 0, 64+1);
 	
-	if (otp_num_to_bytestring(input, byte_string) == 0
-			|| otp_byte_secret(data, byte_secret) == 0)
+	if (otp_num_to_bytestring(input, byte_string) != OTP_OK
+			|| otp_byte_secret(data, byte_secret) != OTP_OK)
 		return OTP_ERROR;
 	
 	int hmac_len = (*(data->algo))(byte_secret, bs_len, byte_string, hmac);
-	if (hmac_len == 0)
+	if (hmac_len < 1 || hmac_len > 64)
 		return OTP_ERROR;
 	
-	uint64_t offset = (hmac[hmac_len - 1] & 0xF);
+	size_t offset = (hmac[hmac_len - 1] & 0xF);
+	if (offset + 3 >= hmac_len)
+		return OTP_ERROR;
 	uint64_t code =
 		(((hmac[offset] & 0x7F) << 24)
 		| ((hmac[offset+1] & 0xFF) << 16)
@@ -470,7 +473,7 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 		| ((hmac[offset+3] & 0xFF)));
 	
 	static const uint64_t POWERS[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
-	code %= (uint64_t) POWERS[data->digits];
+	code %= POWERS[data->digits];
 	
 	sprintf(out_str, "%0*" PRIu64, data->digits, code);
 	
