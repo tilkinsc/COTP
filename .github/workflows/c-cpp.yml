@@ -6,47 +6,82 @@ on:
   pull_request:
     branches: [ "master" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  linux-build:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: linux-binaries
+          - os: windows-latest
+            artifact_name: windows-binaries.7z
+
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up MSYS2 / MinGW toolchain (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >
+          mingw-w64-x86_64-gcc
+
     - name: Compiler version
       run: gcc --version
-    - name: make tests
+
+    - name: Build (make tests)
       run: make tests
-    - name: Test C
-      run: ./test_c
-    - name: Test C++
-      run: ./test_cpp
-    - uses: actions/upload-artifact@v3
-      name: upload binaries
+
+    - name: Run tests (capture exit codes)
+      # don't let the step exit early; collect exit codes so we can upload artifacts then fail later
+      run: |
+        set +e
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          ./test_c.exe
+          rc_c=$?
+          ./test_cpp.exe
+          rc_cpp=$?
+        else
+          ./test_c
+          rc_c=$?
+          ./test_cpp
+          rc_cpp=$?
+        fi
+        echo "TEST_C_EXIT=$rc_c" >> $GITHUB_ENV
+        echo "TEST_CPP_EXIT=$rc_cpp" >> $GITHUB_ENV
+        echo "test_c exit=$rc_c test_cpp exit=$rc_cpp"
+
+    - name: Upload binaries
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
-        name: linux-binaries
+        name: ${{ matrix.artifact_name }}
         path: |
           *.a
           *.so
-  windows-build:
-    runs-on: windows-latest
-    if: false
-    steps:
-    - uses: actions/checkout@v3
-    - uses: egor-tensin/setup-mingw@v2
-      with:
-        platform: x64
-    - name: Compiler version
-      run: gcc --version
-    - name: make tests
-      run: make tests
-    - name: Test C
-      run: test_c.exe
-    - name: Test C++
-      run: test_cpp.exe
-    - uses: actions/upload-artifact@v3
-      name: upload binaries
-      with:
-        name: windows-binaries.7z
-        path: |
-          *.a
           *.dll
+          *.exe
 
+    - name: Fail if tests failed
+      if: always()
+      run: |
+        if [ "${TEST_C_EXIT}" != "0" ] || [ "${TEST_CPP_EXIT}" != "0" ]; then
+          echo "One or more tests failed: test_c=${TEST_C_EXIT} test_cpp=${TEST_CPP_EXIT}"
+          exit 1
+        fi
