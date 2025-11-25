@@ -174,13 +174,13 @@ COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str)
 	if (out_str == NULL)
 		return OTP_ERROR;
 	
-	size_t i = 7;
-	while  (integer != 0)
+	char *p = out_str + 8;
+	do
 	{
-		out_str[i] = integer & 0xFF;
-		i--;
+		*--p = integer & 0xFF;
 		integer >>= 8;
 	}
+	while (p != out_str);
 	
 	return OTP_OK;
 }
