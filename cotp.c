@@ -9,6 +9,32 @@
 
 #include <openssl/rand.h>
 
+// Not valid
+enum { NV = 64 };
+
+/*
+	Default characters used in BASE32 digests for security concious linear lookup.
+	For use with otp_byte_secret()
+*/
+static const unsigned char OTP_DEFAULT_BASE32_OFFSETS[256] = {
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // -1-15
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 16-31
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 32-47
+	NV, NV, 26, 27, 28, 29, 30, 31, NV, NV, NV, NV, NV, NV, NV, NV, // 48-63 ('2'-'7')
+	NV,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, // 64-79 ('A'-'O')
+	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, NV, NV, NV, NV, NV, // 80-95 ('P'-'Z')
+	NV,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, // 96-111 ('a'-'o')
+	15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, NV, NV, NV, NV, NV, // 112-127 ('p'-'z')
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 128-143
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 144-159
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 160-175
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 176-191
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 192-207
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 208-223
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, // 224-239
+	NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV, NV  // 240-255
+};
+
 /*
 	Converts an OTPType enum to string.
 	
@@ -115,6 +141,14 @@ void otp_free(OTPData* data)
 	free(data);
 }
 
+static size_t base32_len(const char *s)
+{
+	size_t len = s ? strlen(s) : 0;
+	while (len > 0 && s[len-1] == '=')
+		--len;
+	return len;
+}
+
 /*
 	Un-base32's a base32 string stored inside an OTPData.
 	
@@ -125,39 +159,29 @@ void otp_free(OTPData* data)
 		error, 0
 */
 COTPRESULT otp_byte_secret(OTPData* data, char* out_str) {
-	if (out_str == NULL || strlen(data->base32_secret) % 8 != 0) {
+	const size_t base32_length = base32_len(data->base32_secret);
+
+	if (base32_length == 0)
 		return OTP_ERROR;
-	}
 	
-	size_t base32_length = strlen(data->base32_secret);
-	size_t num_blocks = base32_length / 8;
-	size_t output_length = num_blocks * 5;
+	unsigned char invalid = 0;
+	unsigned bits = 0, block_value = 0;
 	
-	if (output_length == 0) {
-		return OTP_OK;
-	}
-	
-	int valid = 1;
-	
-	for (size_t i = 0; i < num_blocks; i++) {
-		uint64_t block_value = 0;
-		
-		for (int j = 0; j < 8; j++) {
-			block_value <<= 5;
-			char c = data->base32_secret[i * 8 + j];
-			unsigned int value = (unsigned char) c < 256 ? OTP_DEFAULT_BASE32_OFFSETS[(unsigned char) c] : -1;
-			block_value |= value & 31;
-			valid &= (value >= 0);
+	for (size_t i = 0; i < base32_length ; i++) {
+		block_value <<= 5;
+		bits += 5;
+		unsigned char c = (unsigned char) data->base32_secret[i];
+		unsigned char value = c < 256 ? OTP_DEFAULT_BASE32_OFFSETS[c] : NV;
+		block_value |= value & 31;
+		invalid |= value;
+
+		if (bits >= 8) {
+			bits -= 8;
+			*out_str++ = (block_value >> bits) & 255;
 		}
-		
-		out_str[i * 5 + 0] = block_value >> 32;
-		out_str[i * 5 + 1] = block_value >> 24;
-		out_str[i * 5 + 2] = block_value >> 16;
-		out_str[i * 5 + 3] = block_value >>  8;
-		out_str[i * 5 + 4] = block_value >>  0;
 	}
 
-	return valid ? OTP_OK : OTP_ERROR;
+	return invalid < NV ? OTP_OK : OTP_ERROR;
 }
 
 /*
@@ -174,13 +198,13 @@ COTPRESULT otp_num_to_bytestring(uint64_t integer, char* out_str)
 	if (out_str == NULL)
 		return OTP_ERROR;
 	
-	size_t i = 7;
-	while  (integer != 0)
+	char *p = out_str + 8;
+	do
 	{
-		out_str[i] = integer & 0xFF;
-		i--;
+		*--p = integer & 0xFF;
 		integer >>= 8;
 	}
+	while (p != out_str);
 	
 	return OTP_OK;
 }
@@ -448,7 +472,7 @@ COTPRESULT otp_generate(OTPData* data, uint64_t input, char* out_str)
 	char byte_string[8+1];
 	memset(byte_string, 0, 8+1);
 	
-	size_t bs_len = (strlen(data->base32_secret)/8)*5;
+	size_t bs_len = (base32_len(data->base32_secret)*5)/8;
 	char byte_secret[bs_len + 1];
 	memset(byte_secret, 0, bs_len + 1);
 	

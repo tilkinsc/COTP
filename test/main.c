@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 	int totp_err_1 = totp_now(tdata, tcode);
 	if(totp_err_1 == OTP_ERROR)
 	{
-		fputs("TOTP Error totp_now", stderr);
+		fputs("TOTP Error totp_now\n", stderr);
 		return EXIT_FAILURE;
 	}
 	printf("totp_now() pass=1: `%s` `%d`\n", tcode, totp_err_1);
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
 	int totp_err_2 = totp_at(tdata, 0, 0, tcode2);
 	if(totp_err_2 == OTP_ERROR)
 	{
-		fputs("TOTP Error totp_at", stderr);
+		fputs("TOTP Error totp_at\n", stderr);
 		return EXIT_FAILURE;
 	}
 	printf("totp_at(0, 0) pass=1: `%s` `%d`\n", tcode2, totp_err_2);
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
 	int totp_err_3 = totp_now(tdata_padding, tcode3);
 	if(totp_err_3 == OTP_ERROR)
 	{
-		fputs("TOTP Error totp_now (padding)", stderr);
+		fputs("TOTP Error totp_now (padding)\n", stderr);
 		return EXIT_FAILURE;
 	}
 	printf("totp_now() (padding) pass=1: `%s` `%d`\n", tcode3, totp_err_3);
@@ -301,7 +301,7 @@ int main(int argc, char** argv)
 	int totp_err_4 = totp_at(tdata_padding, 0, 0, tcode4);
 	if(totp_err_4 == OTP_ERROR)
 	{
-		fputs("TOTP Error totp_at (padding)", stderr);
+		fputs("TOTP Error totp_at (padding)\n", stderr);
 		return EXIT_FAILURE;
 	}
 	printf("totp_at(0, 0) (padding) pass=1: `%s` `%d`\n", tcode4, totp_err_4);
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
 	int hotp_err_1 = hotp_at(hdata, 1, hcode);
 	if(hotp_err_1 == OTP_ERROR)
 	{
-		puts("HOTP Error hotp_at");
+		fputs("HOTP Error hotp_at\n", stderr);
 		return EXIT_FAILURE;
 	}
 	printf("hotp_at(1) pass=1: `%s` `%d`\n", hcode, hotp_err_1);

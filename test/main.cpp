@@ -246,7 +246,7 @@ int main(int argc, char** argv)
 	int totp_err_1 = tdata.now(tcode);
 	if(totp_err_1 == OTP_ERROR)
 	{
-		cout << "TOTP Error totp_now (padding)" << endl;
+		cerr << "TOTP Error totp_now (padding)" << endl;
 		return EXIT_FAILURE;
 	}
 	cout << "totp_now() (padding) pass=1: `" << tcode << "` `" << totp_err_1 << "`" << endl;
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
 	int totp_err_2 = tdata.at(0, 0, tcode2);
 	if(totp_err_2 == 0)
 	{
-		cout << "TOTP Error totp_at (padding)" << endl;
+		cerr << "TOTP Error totp_at (padding)" << endl;
 		return EXIT_FAILURE;
 	}
 	cout << "totp_at(0, 0) (padding) pass=1: `" << tcode2 << "` `" << totp_err_2 << "`" << endl;
@@ -296,7 +296,7 @@ int main(int argc, char** argv)
 	int totp_err_3 = tdata_padding.now(tcode3);
 	if(totp_err_3 == OTP_ERROR)
 	{
-		cout << "TOTP Error totp_now" << endl;
+		cerr << "TOTP Error totp_now" << endl;
 		return EXIT_FAILURE;
 	}
 	cout << "totp_now() pass=1: `" << tcode3 << "` `" << totp_err_3 << "`" << endl;
@@ -309,7 +309,7 @@ int main(int argc, char** argv)
 	int totp_err_4 = tdata_padding.at(0, 0, tcode4);
 	if(totp_err_4 == 0)
 	{
-		cout << "TOTP Error totp_at" << endl;
+		cerr << "TOTP Error totp_at" << endl;
 		return EXIT_FAILURE;
 	}
 	cout << "totp_at(0, 0) pass=1: `" << tcode4 << "` `" << totp_err_4 << "`" << endl;
@@ -344,7 +344,7 @@ int main(int argc, char** argv)
 	
 	int hotp_err_1 = hdata.at(1, hcode);
 	if(hotp_err_1 == 0) {
-		cout << "HOTP Error hotp_at" << endl;
+		cerr << "HOTP Error hotp_at" << endl;
 		return EXIT_FAILURE;
 	}
 	cout << "hotp_at(1) pass=1: `" << hcode << "`" << " `" << hotp_err_1 << "`" << endl;
